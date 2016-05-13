@@ -28,14 +28,11 @@ import "github.com/mwitkow/go-grpc-prometheus"
 ...
 ```
 
-
-```
-
-# Status
+## Status
 
 This code has been in an upstream [pull request](https://github.com/grpc/grpc-go/pull/299) since August 2015. It has 
 served as the basis for monitoring of production gRPC micro services at [Improbable](https://improbable.io) since then.
 
-### License
+## License
 
 `go-grpc-prometheus` is released under the Apache 2.0 license. See the [LICENSE](LICENSE) file for details.
