@@ -1,0 +1,10 @@
+nguage: go
+go:
+  - 1.6
+
+install:
+  - go get github.com/prometheus/client_golang/prometheus
+  - go get golang.org/x/net/context
+
+script:
+ - go test -race -v ./...
