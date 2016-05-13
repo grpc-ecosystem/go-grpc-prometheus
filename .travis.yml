@@ -4,6 +4,7 @@ go:
 
 install:
   - go get github.com/prometheus/client_golang/prometheus
+  - go get google.golang.org/grpc
   - go get golang.org/x/net/context
 
 script:
