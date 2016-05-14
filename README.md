@@ -1,7 +1,7 @@
 # Go gRPC Interceptors for Prometheus monitoring 
 
-[![Travis Build](https://travis-ci.org/mwitkow/go-flagz.svg)](https://travis-ci.org/mwitkow/go-grpc-prometheus)
-[![Go Report Card](http://goreportcard.com/badge/mwitkow/go-flagz)](http://goreportcard.com/report/mwitkow/go-grpc-prometheus)
+[![Travis Build](https://travis-ci.org/mwitkow/go-grpc-prometheus.svg)](https://travis-ci.org/mwitkow/go-grpc-prometheus)
+[![Go Report Card](http://goreportcard.com/badge/mwitkow/go-grpc-prometheus)](http://goreportcard.com/report/mwitkow/go-grpc-prometheus)
 [![GoDoc](http://img.shields.io/badge/GoDoc-Reference-blue.svg)](https://godoc.org/github.com/mwitkow/go-grpc-prometheus)
 [![Apache 2.0 License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 
@@ -11,7 +11,7 @@
 
 [gRPC Go](https://github.com/grpc/grpc-go) recently acquired support for Interceptors, i.e. middleware that is executed
 by a gRPC Server before the request is passed onto the user's application logic. It is a perfect way to implement
-common patters: auth, logging and... monitoring.
+common patterns: auth, logging and... monitoring.
 
 To use Interceptors in chains, please see (TODO: publish chaining interceptors lib).
 
@@ -55,7 +55,7 @@ Additionally for completed RPCs, the following labels are used:
   * `code` - the human-readable [gRPC status code](https://github.com/grpc/grpc-go/blob/master/codes/codes.go).
     The list of all statuses is to long, but here are some common ones:
       
-      - `OK` - means the RPC was successfuly
+      - `OK` - means the RPC was successful
       - `IllegalArgument` - RPC contained bad values
       - `Internal` - server-side error not disclosed to the clients
       
@@ -100,7 +100,7 @@ variable `grpc_server_rpc_handled`. It contains three sub-metrics:
 The counter values will look as follows:
 
 ```jsoniq
-pc_server_rpc_handled_bucket{code="OK",method="PingList",service="mwitkow.testproto.TestService",type="server_stream",le="0.005"} 1
+grpc_server_rpc_handled_bucket{code="OK",method="PingList",service="mwitkow.testproto.TestService",type="server_stream",le="0.005"} 1
 grpc_server_rpc_handled_bucket{code="OK",method="PingList",service="mwitkow.testproto.TestService",type="server_stream",le="0.01"} 1
 grpc_server_rpc_handled_bucket{code="OK",method="PingList",service="mwitkow.testproto.TestService",type="server_stream",le="0.025"} 1
 grpc_server_rpc_handled_bucket{code="OK",method="PingList",service="mwitkow.testproto.TestService",type="server_stream",le="0.05"} 1
