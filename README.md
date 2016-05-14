@@ -11,7 +11,7 @@
 
 [gRPC Go](https://github.com/grpc/grpc-go) recently acquired support for Interceptors, i.e. middleware that is executed
 by a gRPC Server before the request is passed onto the user's application logic. It is a perfect way to implement
-common patters: auth, logging and... monitoring.
+common patterns: auth, logging and... monitoring.
 
 To use Interceptors in chains, please see (TODO: publish chaining interceptors lib).
 
@@ -55,7 +55,7 @@ Additionally for completed RPCs, the following labels are used:
   * `code` - the human-readable [gRPC status code](https://github.com/grpc/grpc-go/blob/master/codes/codes.go).
     The list of all statuses is to long, but here are some common ones:
       
-      - `OK` - means the RPC was successfuly
+      - `OK` - means the RPC was successful
       - `IllegalArgument` - RPC contained bad values
       - `Internal` - server-side error not disclosed to the clients
       
