@@ -70,21 +70,21 @@ calling the method `PingList`. The call succeeds and returns 20 messages in the 
 First, immediately after the server receives the call it will increment the
 `grpc_server_rpc_started_total` and start the handling time clock. 
 
-```
+```jsoniq
 grpc_server_rpc_started_total{method="PingList",service="mwitkow.testproto.TestService",type="server_stream"} 1
 ```
 
 Then the user logic gets invoked. It receives one message from the client containing the request 
 (it's a `server_stream`):
 
-```
+```jsoniq
 grpc_server_rpc_msg_received_total{method="PingList",service="mwitkow.testproto.TestService",type="server_stream"} 1
 ```
 
 The user logic may return an error, or send multiple messages back to the client. In this case, on 
 each of the 20 messages sent back, a counter will be incremented:
 
-```
+```jsoniq
 grpc_server_rpc_msg_sent_total{method="PingList",service="mwitkow.testproto.TestService",type="server_stream"} 20
 ```
 
@@ -99,7 +99,7 @@ variable `grpc_server_rpc_handled`. It contains three sub-metrics:
 
 The counter values will look as follows:
 
-```
+```jsoniq
 pc_server_rpc_handled_bucket{code="OK",method="PingList",service="mwitkow.testproto.TestService",type="server_stream",le="0.005"} 1
 grpc_server_rpc_handled_bucket{code="OK",method="PingList",service="mwitkow.testproto.TestService",type="server_stream",le="0.01"} 1
 grpc_server_rpc_handled_bucket{code="OK",method="PingList",service="mwitkow.testproto.TestService",type="server_stream",le="0.025"} 1
@@ -125,7 +125,7 @@ flexibility. Here's a couple of useful monitoring queries:
 
 
 ### request inbound rate
-```
+```jsoniq
 sum(rate(grpc_server_rpc_started_total{job="foo"}[1m])) by (service)
 ```
 For `job="foo"` (common label to differentiate between Prometheus monitoring targets), calculate the
@@ -133,14 +133,14 @@ rate of requests per second (1 minute window) for each gRPC `service` that the j
 how the `method` is being omitted here: all methods of a given gRPC service will be summed together.
 
 ### unary request error rate
-```
+```jsoniq
 sum(rate(grpc_server_rpc_handled_count{job="foo",type="unary",code!="OK"}[1m])) by (service)
 ```
 For `job="foo"`, calculate the per-`service` rate of `unary` (1:1) RPCs that failed, i.e. the 
 ones that didn't finish with `OK` code.
 
 ### unary request error percentage
-```
+```jsoniq
 sum(rate(grpc_server_rpc_handled_count{job="foo",type="unary",code!="OK"}[1m])) by (service)
  / 
 sum(rate(grpc_server_rpc_started_total{job="foo",type="unary"}[1m])) by (service)
@@ -152,7 +152,7 @@ this is a combination of the two above examples. This is an example of a query y
 "no more than 1% requests should fail".
 
 ### average response stream size
-```
+```jsoniq
 sum(rate(grpc_server_rpc_msg_sent_total{job="foo",type="server_stream"}[10m])) by (service)
  /
 sum(rate(grpc_server_rpc_handled_count{job="foo",type="server_stream",code="OK"}[10m])) by (service)
@@ -162,7 +162,7 @@ RPCs. This allows you to track the stream sizes returned by your system, e.g. al
 to track when clients started to send "wide" queries that return hundreds of responses.
 
 ### 99%-tile latency of unary requests
-```
+```jsoniq
 histogram_quantile(0.99, 
   sum(rate(grpc_server_rpc_handled_bucket{job="foo",type="unary"}[5m])) by (service,le)
 )
@@ -174,7 +174,7 @@ estimation will take samples in a rolling `5m` window. When combined with other 
 (e.g. impact of caching).
 
 ### percentage of slow unary queries (>250ms)
-```
+```jsoniq
 100.0 - (
 sum(rate(grpc_server_rpc_handled_bucket{job="foo",type="unary",le="0.25"}[5m])) by (service)
  / 
