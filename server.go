@@ -24,10 +24,19 @@ func UnaryServerInterceptor(ctx context.Context, req interface{}, info *grpc.Una
 
 // StreamServerInterceptor is a gRPC server-side interceptor that provides Prometheus monitoring for Streaming RPCs.
 func StreamServerInterceptor(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
-	monitor := newServerReporter(Streaming, info.FullMethod)
+	monitor := newServerReporter(streamRpcType(info), info.FullMethod)
 	err := handler(srv, &monitoredServerStream{ss, monitor})
 	monitor.Handled(grpc.Code(err))
 	return err
+}
+
+func streamRpcType(info *grpc.StreamServerInfo) rpcType {
+	if info.IsClientStream && !info.IsServerStream {
+		return ClientStream
+	} else if !info.IsClientStream && info.IsServerStream {
+		return ServerStream
+	}
+	return BidiStream
 }
 
 // monitoredStream wraps grpc.ServerStream allowing each Sent/Recv of message to increment counters.

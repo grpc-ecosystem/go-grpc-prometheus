@@ -120,9 +120,9 @@ func (s *ServerInterceptorTestSuite) TestStreamingIncrementsStarted() {
 	var before int
 	var after int
 
-	before = s.sumCountersForMetricAndLabels("grpc_server_rpc_started_total", "PingList", "streaming")
+	before = s.sumCountersForMetricAndLabels("grpc_server_rpc_started_total", "PingList", "server_stream")
 	s.testClient.PingList(s.ctx, &pb_testproto.PingRequest{})
-	after = s.sumCountersForMetricAndLabels("grpc_server_rpc_started_total", "PingList", "streaming")
+	after = s.sumCountersForMetricAndLabels("grpc_server_rpc_started_total", "PingList", "server_stream")
 	assert.EqualValues(s.T(), before+1, after, "grpc_server_rpc_started_total should be incremented for PingList")
 }
 
@@ -130,7 +130,7 @@ func (s *ServerInterceptorTestSuite) TestStreamingIncrementsHistogram() {
 	var before int
 	var after int
 
-	before = s.sumCountersForMetricAndLabels("grpc_server_rpc_handled_count", "PingList", "streaming", "OK")
+	before = s.sumCountersForMetricAndLabels("grpc_server_rpc_handled_count", "PingList", "server_stream", "OK")
 	ss, _ := s.testClient.PingList(s.ctx, &pb_testproto.PingRequest{}) // should return with code=OK
 	// Do a read, just for kicks.
 	for {
@@ -140,20 +140,20 @@ func (s *ServerInterceptorTestSuite) TestStreamingIncrementsHistogram() {
 		}
 		require.NoError(s.T(), err, "reading pingList shouldn't fail")
 	}
-	after = s.sumCountersForMetricAndLabels("grpc_server_rpc_handled_count", "PingList", "streaming", "OK")
+	after = s.sumCountersForMetricAndLabels("grpc_server_rpc_handled_count", "PingList", "server_stream", "OK")
 	assert.EqualValues(s.T(), before+1, after, "grpc_server_rpc_handled_count should be incremented for PingList OK")
 
-	before = s.sumCountersForMetricAndLabels("grpc_server_rpc_handled_count", "PingList", "streaming", "FailedPrecondition")
+	before = s.sumCountersForMetricAndLabels("grpc_server_rpc_handled_count", "PingList", "server_stream", "FailedPrecondition")
 	_, err := s.testClient.PingList(s.ctx, &pb_testproto.PingRequest{ErrorCodeReturned: uint32(codes.FailedPrecondition)}) // should return with code=FailedPrecondition
 	require.NoError(s.T(), err, "PingList must not fail immedietely")
 
-	after = s.sumCountersForMetricAndLabels("grpc_server_rpc_handled_count", "PingList", "streaming", "FailedPrecondition")
+	after = s.sumCountersForMetricAndLabels("grpc_server_rpc_handled_count", "PingList", "server_stream", "FailedPrecondition")
 	assert.EqualValues(s.T(), before+1, after, "grpc_server_rpc_handled_count should be incremented for PingList FailedPrecondition")
 }
 
 func (s *ServerInterceptorTestSuite) TestStreamingIncrementsMessageCounts() {
-	beforeRecv := s.sumCountersForMetricAndLabels("grpc_server_rpc_msg_received_total", "PingList", "streaming")
-	beforeSent := s.sumCountersForMetricAndLabels("grpc_server_rpc_msg_sent_total", "PingList", "streaming")
+	beforeRecv := s.sumCountersForMetricAndLabels("grpc_server_rpc_msg_received_total", "PingList", "server_stream")
+	beforeSent := s.sumCountersForMetricAndLabels("grpc_server_rpc_msg_sent_total", "PingList", "server_stream")
 	ss, _ := s.testClient.PingList(s.ctx, &pb_testproto.PingRequest{}) // should return with code=OK
 	// Do a read, just for kicks.
 	count := 0
@@ -166,8 +166,8 @@ func (s *ServerInterceptorTestSuite) TestStreamingIncrementsMessageCounts() {
 		count += 1
 	}
 	require.EqualValues(s.T(), countListResponses, count, "Number of received msg on the wire must match")
-	afterSent := s.sumCountersForMetricAndLabels("grpc_server_rpc_msg_sent_total", "PingList", "streaming")
-	afterRecv := s.sumCountersForMetricAndLabels("grpc_server_rpc_msg_received_total", "PingList", "streaming")
+	afterSent := s.sumCountersForMetricAndLabels("grpc_server_rpc_msg_sent_total", "PingList", "server_stream")
+	afterRecv := s.sumCountersForMetricAndLabels("grpc_server_rpc_msg_received_total", "PingList", "server_stream")
 
 	assert.EqualValues(s.T(), beforeSent+countListResponses, afterSent, "grpc_server_rpc_msg_sent_total should be incremented 20 times for PingList")
 	assert.EqualValues(s.T(), beforeRecv+1, afterRecv, "grpc_server_rpc_msg_sent_total should be incremented ones for PingList ")

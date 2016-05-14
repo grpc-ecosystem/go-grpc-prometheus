@@ -15,7 +15,9 @@ type rpcType string
 
 const (
 	Unary     rpcType = "unary"
-	Streaming rpcType = "streaming"
+	ClientStream rpcType = "client_stream"
+	ServerStream rpcType = "server_stream"
+	BidiStream rpcType = "bidi_stream"
 )
 
 var (
