@@ -68,7 +68,7 @@ For simplicity, let's assume we're tracking a single server-side RPC call of [`m
 calling the method `PingList`. The call succeeds and returns 20 messages in the stream.
 
 First, immediately after the server receives the call it will increment the
-`grpc_server_rpc_started_total` and start the handling time clock. 
+`grpc_server_rpc_started_total` and start the handling time clock (if histograms are enabled). 
 
 ```jsoniq
 grpc_server_rpc_started_total{method="PingList",service="mwitkow.testproto.TestService",type="server_stream"} 1
@@ -88,7 +88,26 @@ each of the 20 messages sent back, a counter will be incremented:
 grpc_server_rpc_msg_sent_total{method="PingList",service="mwitkow.testproto.TestService",type="server_stream"} 20
 ```
 
-After the call completes, it's status (`OK` or error code) gets represented in the [Prometheus histogram](https://prometheus.io/docs/concepts/metric_types/#histogram)
+After the call completes, it's status (`OK` or other [gRPC status code](https://github.com/grpc/grpc-go/blob/master/codes/codes.go)) 
+and the relevant call labels increment the `grpc_server_rpc_handled_total` counter.
+
+```jsoniq
+grpc_server_rpc_handled_total{code="OK",method="PingList",service="mwitkow.testproto.TestService",type="server_stream"} 1
+```
+
+## Histograms
+
+[Prometheus histograms](https://prometheus.io/docs/concepts/metric_types/#histogram) are a great way
+to measure latency distributions of your RPCs. However since it is bad practice to have metrics
+of [high cardinality](https://prometheus.io/docs/practices/instrumentation/#do-not-overuse-labels))
+the latency monitoring metrics are disabled by default. To enable them please call the following
+in your server initialization code:
+
+```jsoniq
+grpc_prometheus.EnableHandlingTimeHistogram()
+```
+
+After the call completes, it's handling time will be recorded in a [Prometheus histogram](https://prometheus.io/docs/concepts/metric_types/#histogram)
 variable `grpc_server_rpc_handled`. It contains three sub-metrics:
 
  * `grpc_server_rpc_handled_count` - the count of all completed RPCs by status and method 
@@ -134,14 +153,14 @@ how the `method` is being omitted here: all methods of a given gRPC service will
 
 ### unary request error rate
 ```jsoniq
-sum(rate(grpc_server_rpc_handled_count{job="foo",type="unary",code!="OK"}[1m])) by (service)
+sum(rate(grpc_server_rpc_handled_total{job="foo",type="unary",code!="OK"}[1m])) by (service)
 ```
 For `job="foo"`, calculate the per-`service` rate of `unary` (1:1) RPCs that failed, i.e. the 
 ones that didn't finish with `OK` code.
 
 ### unary request error percentage
 ```jsoniq
-sum(rate(grpc_server_rpc_handled_count{job="foo",type="unary",code!="OK"}[1m])) by (service)
+sum(rate(grpc_server_rpc_handled_total{job="foo",type="unary",code!="OK"}[1m])) by (service)
  / 
 sum(rate(grpc_server_rpc_started_total{job="foo",type="unary"}[1m])) by (service)
  * 100.0
@@ -155,7 +174,7 @@ this is a combination of the two above examples. This is an example of a query y
 ```jsoniq
 sum(rate(grpc_server_rpc_msg_sent_total{job="foo",type="server_stream"}[10m])) by (service)
  /
-sum(rate(grpc_server_rpc_handled_count{job="foo",type="server_stream"}[10m])) by (service)
+sum(rate(grpc_server_rpc_handled_total{job="foo",type="server_stream"}[10m])) by (service)
 ```
 For `job="foo"` what is the `service`-wide `10m` average of messages returned for all `server_stream` 
 RPCs. This allows you to track the stream sizes returned by your system, e.g. allows you
@@ -164,7 +183,7 @@ to track when clients started to send "wide" queries that return hundreds of res
 ### 99%-tile latency of unary requests
 ```jsoniq
 histogram_quantile(0.99, 
-  sum(rate(grpc_server_rpc_handled_bucket{job="foo",type="unary"}[5m])) by (service,le)
+  sum(rate(grpc_server_rpc_handling_seconds_bucket{job="foo",type="unary"}[5m])) by (service,le)
 )
 ```
 For `job="foo"`, returns an 99%-tile [quantile estimation](https://prometheus.io/docs/practices/histograms/#quantiles)
@@ -176,9 +195,9 @@ estimation will take samples in a rolling `5m` window. When combined with other 
 ### percentage of slow unary queries (>250ms)
 ```jsoniq
 100.0 - (
-sum(rate(grpc_server_rpc_handled_bucket{job="foo",type="unary",le="0.25"}[5m])) by (service)
+sum(rate(grpc_server_rpc_handling_seconds_bucket{job="foo",type="unary",le="0.25"}[5m])) by (service)
  / 
-sum(rate(grpc_server_rpc_handled_count{job="foo",type="unary"}[5m])) by (service)
+sum(rate(grpc_server_rpc_handling_seconds_count{job="foo",type="unary"}[5m])) by (service)
 ) * 100.0
 ```
 For `job="foo"` calculate the by-`service` fraction of slow requests that took longer than `0.25` 
