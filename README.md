@@ -155,7 +155,7 @@ this is a combination of the two above examples. This is an example of a query y
 ```jsoniq
 sum(rate(grpc_server_rpc_msg_sent_total{job="foo",type="server_stream"}[10m])) by (service)
  /
-sum(rate(grpc_server_rpc_handled_count{job="foo",type="server_stream",code="OK"}[10m])) by (service)
+sum(rate(grpc_server_rpc_handled_count{job="foo",type="server_stream"}[10m])) by (service)
 ```
 For `job="foo"` what is the `service`-wide `10m` average of messages returned for all `server_stream` 
 RPCs. This allows you to track the stream sizes returned by your system, e.g. allows you
