@@ -14,7 +14,7 @@ import (
 type rpcType string
 
 const (
-	Unary     rpcType = "unary"
+	Unary rpcType = "unary"
 	ClientStream rpcType = "client_stream"
 	ServerStream rpcType = "server_stream"
 	BidiStream rpcType = "bidi_stream"
@@ -26,8 +26,16 @@ var (
 			Namespace: "grpc",
 			Subsystem: "server",
 			Name:      "rpc_started_total",
-			Help:      "Total number of RPCs started by the server.",
+			Help:      "Total number of RPCs started on the server.",
 		}, []string{"type", "service", "method"})
+
+	serverHandledCounter = prom.NewCounterVec(
+		prom.CounterOpts{
+			Namespace: "grpc",
+			Subsystem: "server",
+			Name:      "rpc_handled_total",
+			Help:      "Total number of RPCs completed on the server, regardless of success or failure.",
+		}, []string{"type", "service", "method", "code"})
 
 	serverStreamMsgReceived = prom.NewCounterVec(
 		prom.CounterOpts{
@@ -45,21 +53,31 @@ var (
 			Help:      "Total number of RPC stream messages sent by the server.",
 		}, []string{"type", "service", "method"})
 
+	serverHandledHistogramEnabled = false
 	serverHandledHistogram = prom.NewHistogramVec(
 		prom.HistogramOpts{
 			Namespace: "grpc",
 			Subsystem: "server",
-			Name:      "rpc_handled",
-			Help:      "Histogram of response latency of RPC that had been application-level handled by the server.",
+			Name:      "rpc_handling_seconds",
+			Help:      "Histogram of response latency (seconds) of RPC that had been application-level handled by the server.",
 			Buckets:   prom.DefBuckets,
-		}, []string{"type", "service", "method", "code"})
+		}, []string{"type", "service", "method"})
 )
 
 func init() {
 	prom.MustRegister(serverStartedCounter)
+	prom.MustRegister(serverHandledCounter)
 	prom.MustRegister(serverStreamMsgReceived)
 	prom.MustRegister(serverStreamMsgSent)
-	prom.MustRegister(serverHandledHistogram)
+}
+
+// EnableHandlingTimeHistogram turns on recording of handling time of RPCs.
+// Histogram metrics can be very expensive for Prometheus to retain and query.
+func EnableHandlingTimeHistogram() {
+	if !serverHandledHistogramEnabled {
+		prom.Register(serverHandledHistogram)
+	}
+	serverHandledHistogramEnabled = true
 }
 
 type serverReporter struct {
@@ -70,7 +88,10 @@ type serverReporter struct {
 }
 
 func newServerReporter(rpcType rpcType, fullMethod string) *serverReporter {
-	r := &serverReporter{rpcType: rpcType, startTime: time.Now()}
+	r := &serverReporter{rpcType: rpcType}
+	if serverHandledHistogramEnabled {
+		r.startTime = time.Now()
+	}
 	r.serviceName, r.methodName = splitMethodName(fullMethod)
 	serverStartedCounter.WithLabelValues(string(r.rpcType), r.serviceName, r.methodName).Inc()
 	return r
@@ -85,5 +106,8 @@ func (r *serverReporter) SentMessage() {
 }
 
 func (r *serverReporter) Handled(code codes.Code) {
-	serverHandledHistogram.WithLabelValues(string(r.rpcType), r.serviceName, r.methodName, code.String()).Observe(time.Since(r.startTime).Seconds())
+	serverHandledCounter.WithLabelValues(string(r.rpcType), r.serviceName, r.methodName, code.String()).Inc()
+	if serverHandledHistogramEnabled {
+		serverHandledHistogram.WithLabelValues(string(r.rpcType), r.serviceName, r.methodName).Observe(time.Since(r.startTime).Seconds())
+	}
 }
