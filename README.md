@@ -13,18 +13,20 @@
 by a gRPC Server before the request is passed onto the user's application logic. It is a perfect way to implement
 common patterns: auth, logging and... monitoring.
 
-To use Interceptors in chains, please see (TODO: publish chaining interceptors lib).
+To use Interceptors in chains, please see [`go-grpc-middleware`](https://github.com/mwitkow/go-grpc-middleware).
 
 ## Usage
 
 ```go
 import "github.com/mwitkow/go-grpc-prometheus"
 ...
-
+    // Initialize your gRPC server's interceptor.
     myServer := grpc.NewServer(
         grpc.StreamInterceptor(grpc_prometheus.StreamServerInterceptor),
         grpc.UnaryInterceptor(grpc_prometheus.UnaryServerInterceptor),
     )
+    // Register Prometheus metrics handler.    
+    http.Handle("/metrics", prometheus.Handler())
 ...
 ```
 
