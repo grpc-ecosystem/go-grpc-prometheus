@@ -48,6 +48,8 @@ type ServerInterceptorTestSuite struct {
 func (s *ServerInterceptorTestSuite) SetupSuite() {
 	var err error
 
+	EnableHandlingTimeHistogram()
+
 	s.serverListener, err = net.Listen("tcp", "127.0.0.1:0")
 	require.NoError(s.T(), err, "must be able to allocate a port for serverListener")
 
@@ -119,7 +121,6 @@ func (s *ServerInterceptorTestSuite) TestUnaryIncrementsHandled() {
 func (s *ServerInterceptorTestSuite) TestUnaryIncrementsHistograms() {
 	var before int
 	var after int
-	EnableHandlingTimeHistogram()
 
 	before = s.sumCountersForMetricAndLabels("grpc_server_rpc_handling_seconds_count", "PingEmpty", "unary")
 	s.testClient.PingEmpty(s.ctx, &pb_testproto.Empty{}) // should return with code=OK
@@ -146,7 +147,6 @@ func (s *ServerInterceptorTestSuite) TestStreamingIncrementsHistograms() {
 	var before int
 	var after int
 
-	EnableHandlingTimeHistogram()
 	before = s.sumCountersForMetricAndLabels("grpc_server_rpc_handling_seconds_count", "PingList", "server_stream")
 	ss, _ := s.testClient.PingList(s.ctx, &pb_testproto.PingRequest{}) // should return with code=OK
 	// Do a read, just for kicks.
