@@ -11,13 +11,13 @@ import (
 	prom "github.com/prometheus/client_golang/prometheus"
 )
 
-type rpcType string
+type grpcType string
 
 const (
-	Unary rpcType = "unary"
-	ClientStream rpcType = "client_stream"
-	ServerStream rpcType = "server_stream"
-	BidiStream rpcType = "bidi_stream"
+	Unary grpcType = "unary"
+	ClientStream grpcType = "client_stream"
+	ServerStream grpcType = "server_stream"
+	BidiStream grpcType = "bidi_stream"
 )
 
 var (
@@ -25,43 +25,43 @@ var (
 		prom.CounterOpts{
 			Namespace: "grpc",
 			Subsystem: "server",
-			Name:      "rpc_started_total",
+			Name:      "started_total",
 			Help:      "Total number of RPCs started on the server.",
-		}, []string{"type", "service", "method"})
+		}, []string{"grpc_type", "grpc_service", "grpc_method"})
 
 	serverHandledCounter = prom.NewCounterVec(
 		prom.CounterOpts{
 			Namespace: "grpc",
 			Subsystem: "server",
-			Name:      "rpc_handled_total",
+			Name:      "handled_total",
 			Help:      "Total number of RPCs completed on the server, regardless of success or failure.",
-		}, []string{"type", "service", "method", "code"})
+		}, []string{"grpc_type", "grpc_service", "grpc_method", "code"})
 
 	serverStreamMsgReceived = prom.NewCounterVec(
 		prom.CounterOpts{
 			Namespace: "grpc",
 			Subsystem: "server",
-			Name:      "rpc_msg_received_total",
+			Name:      "msg_received_total",
 			Help:      "Total number of RPC stream messages received on the server.",
-		}, []string{"type", "service", "method"})
+		}, []string{"grpc_type", "grpc_service", "grpc_method"})
 
 	serverStreamMsgSent = prom.NewCounterVec(
 		prom.CounterOpts{
 			Namespace: "grpc",
 			Subsystem: "server",
-			Name:      "rpc_msg_sent_total",
-			Help:      "Total number of RPC stream messages sent by the server.",
-		}, []string{"type", "service", "method"})
+			Name:      "msg_sent_total",
+			Help:      "Total number of gRPC stream messages sent by the server.",
+		}, []string{"grpc_type", "grpc_service", "grpc_method"})
 
 	serverHandledHistogramEnabled = false
 	serverHandledHistogram = prom.NewHistogramVec(
 		prom.HistogramOpts{
 			Namespace: "grpc",
 			Subsystem: "server",
-			Name:      "rpc_handling_seconds",
-			Help:      "Histogram of response latency (seconds) of RPC that had been application-level handled by the server.",
+			Name:      "handling_seconds",
+			Help:      "Histogram of response latency (seconds) of gRPC that had been application-level handled by the server.",
 			Buckets:   prom.DefBuckets,
-		}, []string{"type", "service", "method"})
+		}, []string{"grpc_type", "grpc_service", "grpc_method"})
 )
 
 func init() {
@@ -81,13 +81,13 @@ func EnableHandlingTimeHistogram() {
 }
 
 type serverReporter struct {
-	rpcType     rpcType
+	rpcType     grpcType
 	serviceName string
 	methodName  string
 	startTime   time.Time
 }
 
-func newServerReporter(rpcType rpcType, fullMethod string) *serverReporter {
+func newServerReporter(rpcType grpcType, fullMethod string) *serverReporter {
 	r := &serverReporter{rpcType: rpcType}
 	if serverHandledHistogramEnabled {
 		r.startTime = time.Now()

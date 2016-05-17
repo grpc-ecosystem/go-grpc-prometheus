@@ -38,12 +38,12 @@ import "github.com/mwitkow/go-grpc-prometheus"
 All server-side metrics start with `grpc_server` as Prometheus subsystem name. Similarly all methods
 contain the same rich labels:
   
-  * `service` - the [gRPC service](http://www.grpc.io/docs/#defining-a-service) name, which is the combination of protobuf `package` and
+  * `grpc_service` - the [gRPC service](http://www.grpc.io/docs/#defining-a-service) name, which is the combination of protobuf `package` and
     the `service` section name. E.g. for `package = mwitkow.testproto` and 
-     `service TestService` the label will be `service="mwitkow.testproto.TestService"`
-  * `method` - the name of the method called on the gRPC service. E.g.  
-    `method="Ping"`
-  * `type` - the gRPC [type of request](http://www.grpc.io/docs/guides/concepts.html#rpc-life-cycle). 
+     `service TestService` the label will be `grpc_service="mwitkow.testproto.TestService"`
+  * `grpc_method` - the name of the method called on the gRPC service. E.g.  
+    `grpc_method="Ping"`
+  * `grpc_type` - the gRPC [type of request](http://www.grpc.io/docs/guides/concepts.html#rpc-life-cycle). 
     Differentiating between the two is important especially for latency measurements.
 
      - `unary` is single request, single response RPC
@@ -54,7 +54,7 @@ contain the same rich labels:
 
 Additionally for completed RPCs, the following labels are used:
 
-  * `code` - the human-readable [gRPC status code](https://github.com/grpc/grpc-go/blob/master/codes/codes.go).
+  * `grpc_code` - the human-readable [gRPC status code](https://github.com/grpc/grpc-go/blob/master/codes/codes.go).
     The list of all statuses is to long, but here are some common ones:
       
       - `OK` - means the RPC was successful
@@ -70,31 +70,31 @@ For simplicity, let's assume we're tracking a single server-side RPC call of [`m
 calling the method `PingList`. The call succeeds and returns 20 messages in the stream.
 
 First, immediately after the server receives the call it will increment the
-`grpc_server_rpc_started_total` and start the handling time clock (if histograms are enabled). 
+`grpc_server_started_total` and start the handling time clock (if histograms are enabled). 
 
 ```jsoniq
-grpc_server_rpc_started_total{method="PingList",service="mwitkow.testproto.TestService",type="server_stream"} 1
+grpc_server_started_total{grpc_method="PingList",grpc_service="mwitkow.testproto.TestService",grpc_type="server_stream"} 1
 ```
 
 Then the user logic gets invoked. It receives one message from the client containing the request 
 (it's a `server_stream`):
 
 ```jsoniq
-grpc_server_rpc_msg_received_total{method="PingList",service="mwitkow.testproto.TestService",type="server_stream"} 1
+grpc_server_msg_received_total{grpc_method="PingList",grpc_service="mwitkow.testproto.TestService",grpc_type="server_stream"} 1
 ```
 
 The user logic may return an error, or send multiple messages back to the client. In this case, on 
 each of the 20 messages sent back, a counter will be incremented:
 
 ```jsoniq
-grpc_server_rpc_msg_sent_total{method="PingList",service="mwitkow.testproto.TestService",type="server_stream"} 20
+grpc_server_msg_sent_total{grpc_method="PingList",grpc_service="mwitkow.testproto.TestService",grpc_type="server_stream"} 20
 ```
 
 After the call completes, it's status (`OK` or other [gRPC status code](https://github.com/grpc/grpc-go/blob/master/codes/codes.go)) 
-and the relevant call labels increment the `grpc_server_rpc_handled_total` counter.
+and the relevant call labels increment the `grpc_server_handled_total` counter.
 
 ```jsoniq
-grpc_server_rpc_handled_total{code="OK",method="PingList",service="mwitkow.testproto.TestService",type="server_stream"} 1
+grpc_server_handled_total{code="OK",grpc_method="PingList",grpc_service="mwitkow.testproto.TestService",grpc_type="server_stream"} 1
 ```
 
 ## Histograms
@@ -110,31 +110,31 @@ grpc_prometheus.EnableHandlingTimeHistogram()
 ```
 
 After the call completes, it's handling time will be recorded in a [Prometheus histogram](https://prometheus.io/docs/concepts/metric_types/#histogram)
-variable `grpc_server_rpc_handled`. It contains three sub-metrics:
+variable `grpc_server_handled`. It contains three sub-metrics:
 
- * `grpc_server_rpc_handled_count` - the count of all completed RPCs by status and method 
- * `grpc_server_rpc_handled_sum` - cumulative time of RPCs by status and method, useful for 
+ * `grpc_server_handled_count` - the count of all completed RPCs by status and method 
+ * `grpc_server_handled_sum` - cumulative time of RPCs by status and method, useful for 
    calculating average handling times
- * `grpc_server_rpc_handled_bucket` - contains the counts of RPCs by status and method in respective
+ * `grpc_server_handled_bucket` - contains the counts of RPCs by status and method in respective
    handling-time buckets. These buckets can be used by Prometheus to estimate SLAs (see [here](https://prometheus.io/docs/practices/histograms/))
 
 The counter values will look as follows:
 
 ```jsoniq
-grpc_server_rpc_handled_bucket{code="OK",method="PingList",service="mwitkow.testproto.TestService",type="server_stream",le="0.005"} 1
-grpc_server_rpc_handled_bucket{code="OK",method="PingList",service="mwitkow.testproto.TestService",type="server_stream",le="0.01"} 1
-grpc_server_rpc_handled_bucket{code="OK",method="PingList",service="mwitkow.testproto.TestService",type="server_stream",le="0.025"} 1
-grpc_server_rpc_handled_bucket{code="OK",method="PingList",service="mwitkow.testproto.TestService",type="server_stream",le="0.05"} 1
-grpc_server_rpc_handled_bucket{code="OK",method="PingList",service="mwitkow.testproto.TestService",type="server_stream",le="0.1"} 1
-grpc_server_rpc_handled_bucket{code="OK",method="PingList",service="mwitkow.testproto.TestService",type="server_stream",le="0.25"} 1
-grpc_server_rpc_handled_bucket{code="OK",method="PingList",service="mwitkow.testproto.TestService",type="server_stream",le="0.5"} 1
-grpc_server_rpc_handled_bucket{code="OK",method="PingList",service="mwitkow.testproto.TestService",type="server_stream",le="1"} 1
-grpc_server_rpc_handled_bucket{code="OK",method="PingList",service="mwitkow.testproto.TestService",type="server_stream",le="2.5"} 1
-grpc_server_rpc_handled_bucket{code="OK",method="PingList",service="mwitkow.testproto.TestService",type="server_stream",le="5"} 1
-grpc_server_rpc_handled_bucket{code="OK",method="PingList",service="mwitkow.testproto.TestService",type="server_stream",le="10"} 1
-grpc_server_rpc_handled_bucket{code="OK",method="PingList",service="mwitkow.testproto.TestService",type="server_stream",le="+Inf"} 1
-grpc_server_rpc_handled_sum{code="OK",method="PingList",service="mwitkow.testproto.TestService",type="server_stream"} 0.0003866430000000001
-grpc_server_rpc_handled_count{code="OK",method="PingList",service="mwitkow.testproto.TestService",type="server_stream"} 1
+grpc_server_handled_bucket{code="OK",grpc_method="PingList",grpc_service="mwitkow.testproto.TestService",grpc_type="server_stream",le="0.005"} 1
+grpc_server_handled_bucket{code="OK",grpc_method="PingList",grpc_service="mwitkow.testproto.TestService",grpc_type="server_stream",le="0.01"} 1
+grpc_server_handled_bucket{code="OK",grpc_method="PingList",grpc_service="mwitkow.testproto.TestService",grpc_type="server_stream",le="0.025"} 1
+grpc_server_handled_bucket{code="OK",grpc_method="PingList",grpc_service="mwitkow.testproto.TestService",grpc_type="server_stream",le="0.05"} 1
+grpc_server_handled_bucket{code="OK",grpc_method="PingList",grpc_service="mwitkow.testproto.TestService",grpc_type="server_stream",le="0.1"} 1
+grpc_server_handled_bucket{code="OK",grpc_method="PingList",grpc_service="mwitkow.testproto.TestService",grpc_type="server_stream",le="0.25"} 1
+grpc_server_handled_bucket{code="OK",grpc_method="PingList",grpc_service="mwitkow.testproto.TestService",grpc_type="server_stream",le="0.5"} 1
+grpc_server_handled_bucket{code="OK",grpc_method="PingList",grpc_service="mwitkow.testproto.TestService",grpc_type="server_stream",le="1"} 1
+grpc_server_handled_bucket{code="OK",grpc_method="PingList",grpc_service="mwitkow.testproto.TestService",grpc_type="server_stream",le="2.5"} 1
+grpc_server_handled_bucket{code="OK",grpc_method="PingList",grpc_service="mwitkow.testproto.TestService",grpc_type="server_stream",le="5"} 1
+grpc_server_handled_bucket{code="OK",grpc_method="PingList",grpc_service="mwitkow.testproto.TestService",grpc_type="server_stream",le="10"} 1
+grpc_server_handled_bucket{code="OK",grpc_method="PingList",grpc_service="mwitkow.testproto.TestService",grpc_type="server_stream",le="+Inf"} 1
+grpc_server_handled_sum{code="OK",grpc_method="PingList",grpc_service="mwitkow.testproto.TestService",grpc_type="server_stream"} 0.0003866430000000001
+grpc_server_handled_count{code="OK",grpc_method="PingList",grpc_service="mwitkow.testproto.TestService",grpc_type="server_stream"} 1
 ```
 
 
@@ -147,7 +147,7 @@ flexibility. Here's a couple of useful monitoring queries:
 
 ### request inbound rate
 ```jsoniq
-sum(rate(grpc_server_rpc_started_total{job="foo"}[1m])) by (service)
+sum(rate(grpc_server_started_total{job="foo"}[1m])) by (service)
 ```
 For `job="foo"` (common label to differentiate between Prometheus monitoring targets), calculate the
 rate of requests per second (1 minute window) for each gRPC `service` that the job has. Please note
@@ -155,16 +155,16 @@ how the `method` is being omitted here: all methods of a given gRPC service will
 
 ### unary request error rate
 ```jsoniq
-sum(rate(grpc_server_rpc_handled_total{job="foo",type="unary",code!="OK"}[1m])) by (service)
+sum(rate(grpc_server_handled_total{job="foo",grpc_type="unary",code!="OK"}[1m])) by (service)
 ```
 For `job="foo"`, calculate the per-`service` rate of `unary` (1:1) RPCs that failed, i.e. the 
 ones that didn't finish with `OK` code.
 
 ### unary request error percentage
 ```jsoniq
-sum(rate(grpc_server_rpc_handled_total{job="foo",type="unary",code!="OK"}[1m])) by (service)
+sum(rate(grpc_server_handled_total{job="foo",grpc_type="unary",code!="OK"}[1m])) by (service)
  / 
-sum(rate(grpc_server_rpc_started_total{job="foo",type="unary"}[1m])) by (service)
+sum(rate(grpc_server_started_total{job="foo",grpc_type="unary"}[1m])) by (service)
  * 100.0
 ```
 For `job="foo"`, calculate the percentage of failed requests by service. It's easy to notice that
@@ -174,9 +174,9 @@ this is a combination of the two above examples. This is an example of a query y
 
 ### average response stream size
 ```jsoniq
-sum(rate(grpc_server_rpc_msg_sent_total{job="foo",type="server_stream"}[10m])) by (service)
+sum(rate(grpc_server_msg_sent_total{job="foo",grpc_type="server_stream"}[10m])) by (service)
  /
-sum(rate(grpc_server_rpc_handled_total{job="foo",type="server_stream"}[10m])) by (service)
+sum(rate(grpc_server_handled_total{job="foo",grpc_type="server_stream"}[10m])) by (service)
 ```
 For `job="foo"` what is the `service`-wide `10m` average of messages returned for all `server_stream` 
 RPCs. This allows you to track the stream sizes returned by your system, e.g. allows you
@@ -185,7 +185,7 @@ to track when clients started to send "wide" queries that return hundreds of res
 ### 99%-tile latency of unary requests
 ```jsoniq
 histogram_quantile(0.99, 
-  sum(rate(grpc_server_rpc_handling_seconds_bucket{job="foo",type="unary"}[5m])) by (service,le)
+  sum(rate(grpc_server_handling_seconds_bucket{job="foo",grpc_type="unary"}[5m])) by (service,le)
 )
 ```
 For `job="foo"`, returns an 99%-tile [quantile estimation](https://prometheus.io/docs/practices/histograms/#quantiles)
@@ -197,9 +197,9 @@ estimation will take samples in a rolling `5m` window. When combined with other 
 ### percentage of slow unary queries (>250ms)
 ```jsoniq
 100.0 - (
-sum(rate(grpc_server_rpc_handling_seconds_bucket{job="foo",type="unary",le="0.25"}[5m])) by (service)
+sum(rate(grpc_server_handling_seconds_bucket{job="foo",grpc_type="unary",le="0.25"}[5m])) by (service)
  / 
-sum(rate(grpc_server_rpc_handling_seconds_count{job="foo",type="unary"}[5m])) by (service)
+sum(rate(grpc_server_handling_seconds_count{job="foo",grpc_type="unary"}[5m])) by (service)
 ) * 100.0
 ```
 For `job="foo"` calculate the by-`service` fraction of slow requests that took longer than `0.25` 
