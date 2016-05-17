@@ -31,7 +31,7 @@ func StreamServerInterceptor(srv interface{}, ss grpc.ServerStream, info *grpc.S
 	return err
 }
 
-func streamRpcType(info *grpc.StreamServerInfo) rpcType {
+func streamRpcType(info *grpc.StreamServerInfo) grpcType {
 	if info.IsClientStream && !info.IsServerStream {
 		return ClientStream
 	} else if !info.IsClientStream && info.IsServerStream {
