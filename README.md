@@ -110,31 +110,31 @@ grpc_prometheus.EnableHandlingTimeHistogram()
 ```
 
 After the call completes, it's handling time will be recorded in a [Prometheus histogram](https://prometheus.io/docs/concepts/metric_types/#histogram)
-variable `grpc_server_handled`. It contains three sub-metrics:
+variable `grpc_server_handling_seconds`. It contains three sub-metrics:
 
- * `grpc_server_handled_count` - the count of all completed RPCs by status and method 
- * `grpc_server_handled_sum` - cumulative time of RPCs by status and method, useful for 
+ * `grpc_server_handling_seconds_count` - the count of all completed RPCs by status and method 
+ * `grpc_server_handling_seconds_sum` - cumulative time of RPCs by status and method, useful for 
    calculating average handling times
- * `grpc_server_handled_bucket` - contains the counts of RPCs by status and method in respective
+ * `grpc_server_handling_seconds_bucket` - contains the counts of RPCs by status and method in respective
    handling-time buckets. These buckets can be used by Prometheus to estimate SLAs (see [here](https://prometheus.io/docs/practices/histograms/))
 
 The counter values will look as follows:
 
 ```jsoniq
-grpc_server_handled_bucket{code="OK",grpc_method="PingList",grpc_service="mwitkow.testproto.TestService",grpc_type="server_stream",le="0.005"} 1
-grpc_server_handled_bucket{code="OK",grpc_method="PingList",grpc_service="mwitkow.testproto.TestService",grpc_type="server_stream",le="0.01"} 1
-grpc_server_handled_bucket{code="OK",grpc_method="PingList",grpc_service="mwitkow.testproto.TestService",grpc_type="server_stream",le="0.025"} 1
-grpc_server_handled_bucket{code="OK",grpc_method="PingList",grpc_service="mwitkow.testproto.TestService",grpc_type="server_stream",le="0.05"} 1
-grpc_server_handled_bucket{code="OK",grpc_method="PingList",grpc_service="mwitkow.testproto.TestService",grpc_type="server_stream",le="0.1"} 1
-grpc_server_handled_bucket{code="OK",grpc_method="PingList",grpc_service="mwitkow.testproto.TestService",grpc_type="server_stream",le="0.25"} 1
-grpc_server_handled_bucket{code="OK",grpc_method="PingList",grpc_service="mwitkow.testproto.TestService",grpc_type="server_stream",le="0.5"} 1
-grpc_server_handled_bucket{code="OK",grpc_method="PingList",grpc_service="mwitkow.testproto.TestService",grpc_type="server_stream",le="1"} 1
-grpc_server_handled_bucket{code="OK",grpc_method="PingList",grpc_service="mwitkow.testproto.TestService",grpc_type="server_stream",le="2.5"} 1
-grpc_server_handled_bucket{code="OK",grpc_method="PingList",grpc_service="mwitkow.testproto.TestService",grpc_type="server_stream",le="5"} 1
-grpc_server_handled_bucket{code="OK",grpc_method="PingList",grpc_service="mwitkow.testproto.TestService",grpc_type="server_stream",le="10"} 1
-grpc_server_handled_bucket{code="OK",grpc_method="PingList",grpc_service="mwitkow.testproto.TestService",grpc_type="server_stream",le="+Inf"} 1
-grpc_server_handled_sum{code="OK",grpc_method="PingList",grpc_service="mwitkow.testproto.TestService",grpc_type="server_stream"} 0.0003866430000000001
-grpc_server_handled_count{code="OK",grpc_method="PingList",grpc_service="mwitkow.testproto.TestService",grpc_type="server_stream"} 1
+grpc_server_handling_seconds_bucket{code="OK",grpc_method="PingList",grpc_service="mwitkow.testproto.TestService",grpc_type="server_stream",le="0.005"} 1
+grpc_server_handling_seconds_bucket{code="OK",grpc_method="PingList",grpc_service="mwitkow.testproto.TestService",grpc_type="server_stream",le="0.01"} 1
+grpc_server_handling_seconds_bucket{code="OK",grpc_method="PingList",grpc_service="mwitkow.testproto.TestService",grpc_type="server_stream",le="0.025"} 1
+grpc_server_handling_seconds_bucket{code="OK",grpc_method="PingList",grpc_service="mwitkow.testproto.TestService",grpc_type="server_stream",le="0.05"} 1
+grpc_server_handling_seconds_bucket{code="OK",grpc_method="PingList",grpc_service="mwitkow.testproto.TestService",grpc_type="server_stream",le="0.1"} 1
+grpc_server_handling_seconds_bucket{code="OK",grpc_method="PingList",grpc_service="mwitkow.testproto.TestService",grpc_type="server_stream",le="0.25"} 1
+grpc_server_handling_seconds_bucket{code="OK",grpc_method="PingList",grpc_service="mwitkow.testproto.TestService",grpc_type="server_stream",le="0.5"} 1
+grpc_server_handling_seconds_bucket{code="OK",grpc_method="PingList",grpc_service="mwitkow.testproto.TestService",grpc_type="server_stream",le="1"} 1
+grpc_server_handling_seconds_bucket{code="OK",grpc_method="PingList",grpc_service="mwitkow.testproto.TestService",grpc_type="server_stream",le="2.5"} 1
+grpc_server_handling_seconds_bucket{code="OK",grpc_method="PingList",grpc_service="mwitkow.testproto.TestService",grpc_type="server_stream",le="5"} 1
+grpc_server_handling_seconds_bucket{code="OK",grpc_method="PingList",grpc_service="mwitkow.testproto.TestService",grpc_type="server_stream",le="10"} 1
+grpc_server_handling_seconds_bucket{code="OK",grpc_method="PingList",grpc_service="mwitkow.testproto.TestService",grpc_type="server_stream",le="+Inf"} 1
+grpc_server_handling_seconds_sum{code="OK",grpc_method="PingList",grpc_service="mwitkow.testproto.TestService",grpc_type="server_stream"} 0.0003866430000000001
+grpc_server_handling_seconds_count{code="OK",grpc_method="PingList",grpc_service="mwitkow.testproto.TestService",grpc_type="server_stream"} 1
 ```
 
 
