@@ -35,7 +35,7 @@ var (
 			Subsystem: "server",
 			Name:      "handled_total",
 			Help:      "Total number of RPCs completed on the server, regardless of success or failure.",
-		}, []string{"grpc_type", "grpc_service", "grpc_method", "code"})
+		}, []string{"grpc_type", "grpc_service", "grpc_method", "grpc_code"})
 
 	serverStreamMsgReceived = prom.NewCounterVec(
 		prom.CounterOpts{
