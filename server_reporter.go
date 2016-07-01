@@ -54,14 +54,14 @@ var (
 		}, []string{"grpc_type", "grpc_service", "grpc_method"})
 
 	serverHandledHistogramEnabled = false
-	serverHandledHistogram = prom.NewHistogramVec(
-		prom.HistogramOpts{
-			Namespace: "grpc",
-			Subsystem: "server",
-			Name:      "handling_seconds",
-			Help:      "Histogram of response latency (seconds) of gRPC that had been application-level handled by the server.",
-			Buckets:   prom.DefBuckets,
-		}, []string{"grpc_type", "grpc_service", "grpc_method"})
+	serverHandledHistogramOpts = prom.HistogramOpts{
+		Namespace: "grpc",
+		Subsystem: "server",
+		Name:      "handling_seconds",
+		Help:      "Histogram of response latency (seconds) of gRPC that had been application-level handled by the server.",
+		Buckets:   prom.DefBuckets,
+	}
+	serverHandledHistogram *prom.HistogramVec
 )
 
 func init() {
@@ -71,10 +71,23 @@ func init() {
 	prom.MustRegister(serverStreamMsgSent)
 }
 
+type HistogramOption func(*prom.HistogramOpts)
+
+func WithHistogramBuckets(buckets []float64) HistogramOption {
+	return func(o *prom.HistogramOpts) { o.Buckets = buckets }
+}
+
 // EnableHandlingTimeHistogram turns on recording of handling time of RPCs.
 // Histogram metrics can be very expensive for Prometheus to retain and query.
-func EnableHandlingTimeHistogram() {
+func EnableHandlingTimeHistogram(opts ...HistogramOption) {
+	for _, o := range opts {
+		o(&serverHandledHistogramOpts)
+	}
 	if !serverHandledHistogramEnabled {
+		serverHandledHistogram = prom.NewHistogramVec(
+			serverHandledHistogramOpts,
+			[]string{"grpc_type", "grpc_service", "grpc_method"},
+		)
 		prom.Register(serverHandledHistogram)
 	}
 	serverHandledHistogramEnabled = true
