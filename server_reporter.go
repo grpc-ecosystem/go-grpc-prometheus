@@ -9,15 +9,16 @@ import (
 	"google.golang.org/grpc/codes"
 
 	prom "github.com/prometheus/client_golang/prometheus"
+	"google.golang.org/grpc"
 )
 
 type grpcType string
 
 const (
-	Unary grpcType = "unary"
+	Unary        grpcType = "unary"
 	ClientStream grpcType = "client_stream"
 	ServerStream grpcType = "server_stream"
-	BidiStream grpcType = "bidi_stream"
+	BidiStream   grpcType = "bidi_stream"
 )
 
 var (
@@ -54,7 +55,7 @@ var (
 		}, []string{"grpc_type", "grpc_service", "grpc_method"})
 
 	serverHandledHistogramEnabled = false
-	serverHandledHistogramOpts = prom.HistogramOpts{
+	serverHandledHistogramOpts    = prom.HistogramOpts{
 		Namespace: "grpc",
 		Subsystem: "server",
 		Name:      "handling_seconds",
@@ -73,6 +74,7 @@ func init() {
 
 type HistogramOption func(*prom.HistogramOpts)
 
+// WithHistogramBuckets allows you to specify custom bucket ranges for histograms if EnableHandlingTimeHistogram is on.
 func WithHistogramBuckets(buckets []float64) HistogramOption {
 	return func(o *prom.HistogramOpts) { o.Buckets = buckets }
 }
@@ -123,4 +125,33 @@ func (r *serverReporter) Handled(code codes.Code) {
 	if serverHandledHistogramEnabled {
 		serverHandledHistogram.WithLabelValues(string(r.rpcType), r.serviceName, r.methodName).Observe(time.Since(r.startTime).Seconds())
 	}
+}
+
+// preRegisterMethod is invoked on Register of a Server, allowing all gRPC services labels to be pre-populated.
+func preRegisterMethod(serviceName string, mInfo *grpc.MethodInfo) {
+	methodName := mInfo.Name
+	methodType := string(typeFromMethodInfo(mInfo))
+	// These are just references (no increments), as just referencing will create the labels but not set values.
+	serverStartedCounter.GetMetricWithLabelValues(methodType, serviceName, methodName)
+	serverStreamMsgReceived.GetMetricWithLabelValues(methodType, serviceName, methodName)
+	serverStreamMsgSent.GetMetricWithLabelValues(methodType, serviceName, methodName)
+	if serverHandledHistogramEnabled {
+		serverHandledHistogram.GetMetricWithLabelValues(methodType, serviceName, methodName)
+	}
+	for _, code := range allCodes {
+		serverHandledCounter.GetMetricWithLabelValues(methodType, serviceName, methodName, code.String())
+	}
+}
+
+func typeFromMethodInfo(mInfo *grpc.MethodInfo) grpcType {
+	if mInfo.IsClientStream == false && mInfo.IsServerStream == false {
+		return Unary
+	}
+	if mInfo.IsClientStream == true && mInfo.IsServerStream == false {
+		return ClientStream
+	}
+	if mInfo.IsClientStream == false && mInfo.IsServerStream == true {
+		return ServerStream
+	}
+	return BidiStream
 }
