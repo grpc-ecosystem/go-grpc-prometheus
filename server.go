@@ -10,6 +10,17 @@ import (
 	"google.golang.org/grpc"
 )
 
+// PreregisterServices takes a gRPC server and pre-initializes all counters to 0.
+// This allows for easier monitoring in Prometheus (no missing metrics), and should be called *after* all services have
+// been registered with the server.
+func Register(server *grpc.Server) {
+	serviceInfo := server.GetServiceInfo()
+	for serviceName, info := range serviceInfo {
+		for _, mInfo := range info.Methods {
+			preRegisterMethod(serviceName, &mInfo)
+		}
+	}
+}
 
 // UnaryServerInterceptor is a gRPC server-side interceptor that provides Prometheus monitoring for Unary RPCs.
 func UnaryServerInterceptor(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
