@@ -7,6 +7,8 @@
 
 [Prometheus](https://prometheus.io/) monitoring for your [gRPC Go](https://github.com/grpc/grpc-go) servers.
 
+A sister implementation for [gRPC Java](https://github.com/grpc/grpc-java) (same metrics, same semantics) is in [dinowerlni/java-grpc-prometheus](https://github.com/dinowernli/java-grpc-prometheus).
+
 ## Interceptors
 
 [gRPC Go](https://github.com/grpc/grpc-go) recently acquired support for Interceptors, i.e. middleware that is executed
