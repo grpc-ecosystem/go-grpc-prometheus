@@ -1,7 +1,7 @@
 # Go gRPC Interceptors for Prometheus monitoring 
 
 [![Travis Build](https://travis-ci.org/mwitkow/go-grpc-prometheus.svg)](https://travis-ci.org/mwitkow/go-grpc-prometheus)
-[![Go Report Card](http://goreportcard.com/badge/mwitkow/go-grpc-prometheus)](http://goreportcard.com/report/mwitkow/go-grpc-prometheus)
+[![Go Report Card](https://goreportcard.com/badge/github.com/mwitkow/go-grpc-prometheus)](http://goreportcard.com/report/mwitkow/go-grpc-prometheus)
 [![GoDoc](http://img.shields.io/badge/GoDoc-Reference-blue.svg)](https://godoc.org/github.com/mwitkow/go-grpc-prometheus)
 [![Apache 2.0 License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 
