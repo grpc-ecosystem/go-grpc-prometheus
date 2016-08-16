@@ -1,13 +1,13 @@
 # Go gRPC Interceptors for Prometheus monitoring 
 
-[![Travis Build](https://travis-ci.org/mwitkow/go-grpc-prometheus.svg)](https://travis-ci.org/mwitkow/go-grpc-prometheus)
-[![Go Report Card](https://goreportcard.com/badge/github.com/mwitkow/go-grpc-prometheus)](http://goreportcard.com/report/mwitkow/go-grpc-prometheus)
-[![GoDoc](http://img.shields.io/badge/GoDoc-Reference-blue.svg)](https://godoc.org/github.com/mwitkow/go-grpc-prometheus)
+[![Travis Build](https://travis-ci.org/grpc-ecosystem/go-grpc-prometheus.svg)](https://travis-ci.org/grpc-ecosystem/go-grpc-prometheus)
+[![Go Report Card](https://goreportcard.com/badge/github.com/grpc-ecosystem/go-grpc-prometheus)](http://goreportcard.com/report/grpc-ecosystem/go-grpc-prometheus)
+[![GoDoc](http://img.shields.io/badge/GoDoc-Reference-blue.svg)](https://godoc.org/github.com/grpc-ecosystem/go-grpc-prometheus)
 [![Apache 2.0 License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 
 [Prometheus](https://prometheus.io/) monitoring for your [gRPC Go](https://github.com/grpc/grpc-go) servers.
 
-A sister implementation for [gRPC Java](https://github.com/grpc/grpc-java) (same metrics, same semantics) is in [dinowerlni/java-grpc-prometheus](https://github.com/dinowernli/java-grpc-prometheus).
+A sister implementation for [gRPC Java](https://github.com/grpc/grpc-java) (same metrics, same semantics) is in [grpc-ecosystem/java-grpc-prometheus](https://github.com/grpc-ecosystem/java-grpc-prometheus).
 
 ## Interceptors
 
