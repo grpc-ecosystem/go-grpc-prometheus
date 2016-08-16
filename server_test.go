@@ -16,7 +16,7 @@ import (
 	"strconv"
 	"strings"
 
-	pb_testproto "github.com/mwitkow/go-grpc-prometheus/examples/testproto"
+	pb_testproto "github.com/grpc-ecosystem/go-grpc-prometheus/examples/testproto"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"

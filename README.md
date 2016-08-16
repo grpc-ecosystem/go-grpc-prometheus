@@ -20,7 +20,7 @@ To use Interceptors in chains, please see [`go-grpc-middleware`](https://github.
 ## Usage
 
 ```go
-import "github.com/mwitkow/go-grpc-prometheus"
+import "github.com/grpc-ecosystem/go-grpc-prometheus"
 ...
     // Initialize your gRPC server's interceptor.
     myServer := grpc.NewServer(
