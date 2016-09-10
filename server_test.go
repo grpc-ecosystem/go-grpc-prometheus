@@ -4,17 +4,15 @@
 package grpc_prometheus
 
 import (
-	"net"
-	"testing"
-
-	"time"
-
 	"bufio"
 	"io"
+	"net"
 	"net/http"
 	"net/http/httptest"
 	"strconv"
 	"strings"
+	"testing"
+	"time"
 
 	pb_testproto "github.com/grpc-ecosystem/go-grpc-prometheus/examples/testproto"
 	"github.com/prometheus/client_golang/prometheus"
@@ -31,7 +29,7 @@ const (
 	countListResponses = 20
 )
 
-func TestProxyHappySuite(t *testing.T) {
+func TestServerInterceptorSuite(t *testing.T) {
 	suite.Run(t, &ServerInterceptorTestSuite{})
 }
 
@@ -71,7 +69,6 @@ func (s *ServerInterceptorTestSuite) SetupSuite() {
 
 	// Important! Pre-register stuff here.
 	Register(s.server)
-
 }
 
 func (s *ServerInterceptorTestSuite) SetupTest() {
@@ -107,8 +104,8 @@ func (s *ServerInterceptorTestSuite) TestRegisterPresetsStuff() {
 		{"grpc_server_handled_total", []string{"mwitkow.testproto.TestService", "PingEmpty", "unary", "FailedPrecondition"}},
 		{"grpc_server_handled_total", []string{"mwitkow.testproto.TestService", "PingEmpty", "unary", "ResourceExhausted"}},
 	} {
-		assert.Equal(s.T(), 0, s.sumCountersForMetricAndLabels(testCase.metricName, testCase.existingLabels...),
-			"metrics must be pre-set for test case %d", testId)
+		lineCount := len(fetchPrometheusLines(s.T(), testCase.metricName, testCase.existingLabels...))
+		assert.NotEqual(s.T(), 0, lineCount, "metrics must exist for test case %d", testId)
 	}
 }
 
@@ -116,14 +113,14 @@ func (s *ServerInterceptorTestSuite) TestUnaryIncrementsStarted() {
 	var before int
 	var after int
 
-	before = s.sumCountersForMetricAndLabels("grpc_server_started_total", "PingEmpty", "unary")
+	before = sumCountersForMetricAndLabels(s.T(), "grpc_server_started_total", "PingEmpty", "unary")
 	s.testClient.PingEmpty(s.ctx, &pb_testproto.Empty{})
-	after = s.sumCountersForMetricAndLabels("grpc_server_started_total", "PingEmpty", "unary")
+	after = sumCountersForMetricAndLabels(s.T(), "grpc_server_started_total", "PingEmpty", "unary")
 	assert.EqualValues(s.T(), before+1, after, "grpc_server_started_total should be incremented for PingEmpty")
 
-	before = s.sumCountersForMetricAndLabels("grpc_server_started_total", "PingError", "unary")
+	before = sumCountersForMetricAndLabels(s.T(), "grpc_server_started_total", "PingError", "unary")
 	s.testClient.PingError(s.ctx, &pb_testproto.PingRequest{ErrorCodeReturned: uint32(codes.Unavailable)})
-	after = s.sumCountersForMetricAndLabels("grpc_server_started_total", "PingError", "unary")
+	after = sumCountersForMetricAndLabels(s.T(), "grpc_server_started_total", "PingError", "unary")
 	assert.EqualValues(s.T(), before+1, after, "grpc_server_started_total should be incremented for PingError")
 }
 
@@ -131,14 +128,14 @@ func (s *ServerInterceptorTestSuite) TestUnaryIncrementsHandled() {
 	var before int
 	var after int
 
-	before = s.sumCountersForMetricAndLabels("grpc_server_handled_total", "PingEmpty", "unary", "OK")
+	before = sumCountersForMetricAndLabels(s.T(), "grpc_server_handled_total", "PingEmpty", "unary", "OK")
 	s.testClient.PingEmpty(s.ctx, &pb_testproto.Empty{}) // should return with code=OK
-	after = s.sumCountersForMetricAndLabels("grpc_server_handled_total", "PingEmpty", "unary", "OK")
+	after = sumCountersForMetricAndLabels(s.T(), "grpc_server_handled_total", "PingEmpty", "unary", "OK")
 	assert.EqualValues(s.T(), before+1, after, "grpc_server_handled_count should be incremented for PingEmpty")
 
-	before = s.sumCountersForMetricAndLabels("grpc_server_handled_total", "PingError", "unary", "FailedPrecondition")
+	before = sumCountersForMetricAndLabels(s.T(), "grpc_server_handled_total", "PingError", "unary", "FailedPrecondition")
 	s.testClient.PingError(s.ctx, &pb_testproto.PingRequest{ErrorCodeReturned: uint32(codes.FailedPrecondition)}) // should return with code=FailedPrecondition
-	after = s.sumCountersForMetricAndLabels("grpc_server_handled_total", "PingError", "unary", "FailedPrecondition")
+	after = sumCountersForMetricAndLabels(s.T(), "grpc_server_handled_total", "PingError", "unary", "FailedPrecondition")
 	assert.EqualValues(s.T(), before+1, after, "grpc_server_handled_total should be incremented for PingError")
 }
 
@@ -146,14 +143,14 @@ func (s *ServerInterceptorTestSuite) TestUnaryIncrementsHistograms() {
 	var before int
 	var after int
 
-	before = s.sumCountersForMetricAndLabels("grpc_server_handling_seconds_count", "PingEmpty", "unary")
+	before = sumCountersForMetricAndLabels(s.T(), "grpc_server_handling_seconds_count", "PingEmpty", "unary")
 	s.testClient.PingEmpty(s.ctx, &pb_testproto.Empty{}) // should return with code=OK
-	after = s.sumCountersForMetricAndLabels("grpc_server_handling_seconds_count", "PingEmpty", "unary")
+	after = sumCountersForMetricAndLabels(s.T(), "grpc_server_handling_seconds_count", "PingEmpty", "unary")
 	assert.EqualValues(s.T(), before+1, after, "grpc_server_handled_count should be incremented for PingEmpty")
 
-	before = s.sumCountersForMetricAndLabels("grpc_server_handling_seconds_count", "PingError", "unary")
+	before = sumCountersForMetricAndLabels(s.T(), "grpc_server_handling_seconds_count", "PingError", "unary")
 	s.testClient.PingError(s.ctx, &pb_testproto.PingRequest{ErrorCodeReturned: uint32(codes.FailedPrecondition)}) // should return with code=FailedPrecondition
-	after = s.sumCountersForMetricAndLabels("grpc_server_handling_seconds_count", "PingError", "unary")
+	after = sumCountersForMetricAndLabels(s.T(), "grpc_server_handling_seconds_count", "PingError", "unary")
 	assert.EqualValues(s.T(), before+1, after, "grpc_server_handling_seconds_count should be incremented for PingError")
 }
 
@@ -161,9 +158,9 @@ func (s *ServerInterceptorTestSuite) TestStreamingIncrementsStarted() {
 	var before int
 	var after int
 
-	before = s.sumCountersForMetricAndLabels("grpc_server_started_total", "PingList", "server_stream")
+	before = sumCountersForMetricAndLabels(s.T(), "grpc_server_started_total", "PingList", "server_stream")
 	s.testClient.PingList(s.ctx, &pb_testproto.PingRequest{})
-	after = s.sumCountersForMetricAndLabels("grpc_server_started_total", "PingList", "server_stream")
+	after = sumCountersForMetricAndLabels(s.T(), "grpc_server_started_total", "PingList", "server_stream")
 	assert.EqualValues(s.T(), before+1, after, "grpc_server_started_total should be incremented for PingList")
 }
 
@@ -171,7 +168,7 @@ func (s *ServerInterceptorTestSuite) TestStreamingIncrementsHistograms() {
 	var before int
 	var after int
 
-	before = s.sumCountersForMetricAndLabels("grpc_server_handling_seconds_count", "PingList", "server_stream")
+	before = sumCountersForMetricAndLabels(s.T(), "grpc_server_handling_seconds_count", "PingList", "server_stream")
 	ss, _ := s.testClient.PingList(s.ctx, &pb_testproto.PingRequest{}) // should return with code=OK
 	// Do a read, just for kicks.
 	for {
@@ -181,14 +178,14 @@ func (s *ServerInterceptorTestSuite) TestStreamingIncrementsHistograms() {
 		}
 		require.NoError(s.T(), err, "reading pingList shouldn't fail")
 	}
-	after = s.sumCountersForMetricAndLabels("grpc_server_handling_seconds_count", "PingList", "server_stream")
+	after = sumCountersForMetricAndLabels(s.T(), "grpc_server_handling_seconds_count", "PingList", "server_stream")
 	assert.EqualValues(s.T(), before+1, after, "grpc_server_handling_seconds_count should be incremented for PingList OK")
 
-	before = s.sumCountersForMetricAndLabels("grpc_server_handling_seconds_count", "PingList", "server_stream")
+	before = sumCountersForMetricAndLabels(s.T(), "grpc_server_handling_seconds_count", "PingList", "server_stream")
 	_, err := s.testClient.PingList(s.ctx, &pb_testproto.PingRequest{ErrorCodeReturned: uint32(codes.FailedPrecondition)}) // should return with code=FailedPrecondition
 	require.NoError(s.T(), err, "PingList must not fail immedietely")
 
-	after = s.sumCountersForMetricAndLabels("grpc_server_handling_seconds_count", "PingList", "server_stream")
+	after = sumCountersForMetricAndLabels(s.T(), "grpc_server_handling_seconds_count", "PingList", "server_stream")
 	assert.EqualValues(s.T(), before+1, after, "grpc_server_handling_seconds_count should be incremented for PingList FailedPrecondition")
 }
 
@@ -196,7 +193,7 @@ func (s *ServerInterceptorTestSuite) TestStreamingIncrementsHandled() {
 	var before int
 	var after int
 
-	before = s.sumCountersForMetricAndLabels("grpc_server_handled_total", "PingList", "server_stream", "OK")
+	before = sumCountersForMetricAndLabels(s.T(), "grpc_server_handled_total", "PingList", "server_stream", "OK")
 	ss, _ := s.testClient.PingList(s.ctx, &pb_testproto.PingRequest{}) // should return with code=OK
 	// Do a read, just for kicks.
 	for {
@@ -206,20 +203,20 @@ func (s *ServerInterceptorTestSuite) TestStreamingIncrementsHandled() {
 		}
 		require.NoError(s.T(), err, "reading pingList shouldn't fail")
 	}
-	after = s.sumCountersForMetricAndLabels("grpc_server_handled_total", "PingList", "server_stream", "OK")
+	after = sumCountersForMetricAndLabels(s.T(), "grpc_server_handled_total", "PingList", "server_stream", "OK")
 	assert.EqualValues(s.T(), before+1, after, "grpc_server_handled_total should be incremented for PingList OK")
 
-	before = s.sumCountersForMetricAndLabels("grpc_server_handled_total", "PingList", "server_stream", "FailedPrecondition")
+	before = sumCountersForMetricAndLabels(s.T(), "grpc_server_handled_total", "PingList", "server_stream", "FailedPrecondition")
 	_, err := s.testClient.PingList(s.ctx, &pb_testproto.PingRequest{ErrorCodeReturned: uint32(codes.FailedPrecondition)}) // should return with code=FailedPrecondition
 	require.NoError(s.T(), err, "PingList must not fail immedietely")
 
-	after = s.sumCountersForMetricAndLabels("grpc_server_handled_total", "PingList", "server_stream", "FailedPrecondition")
+	after = sumCountersForMetricAndLabels(s.T(), "grpc_server_handled_total", "PingList", "server_stream", "FailedPrecondition")
 	assert.EqualValues(s.T(), before+1, after, "grpc_server_handled_total should be incremented for PingList FailedPrecondition")
 }
 
 func (s *ServerInterceptorTestSuite) TestStreamingIncrementsMessageCounts() {
-	beforeRecv := s.sumCountersForMetricAndLabels("grpc_server_msg_received_total", "PingList", "server_stream")
-	beforeSent := s.sumCountersForMetricAndLabels("grpc_server_msg_sent_total", "PingList", "server_stream")
+	beforeRecv := sumCountersForMetricAndLabels(s.T(), "grpc_server_msg_received_total", "PingList", "server_stream")
+	beforeSent := sumCountersForMetricAndLabels(s.T(), "grpc_server_msg_sent_total", "PingList", "server_stream")
 	ss, _ := s.testClient.PingList(s.ctx, &pb_testproto.PingRequest{}) // should return with code=OK
 	// Do a read, just for kicks.
 	count := 0
@@ -232,17 +229,17 @@ func (s *ServerInterceptorTestSuite) TestStreamingIncrementsMessageCounts() {
 		count += 1
 	}
 	require.EqualValues(s.T(), countListResponses, count, "Number of received msg on the wire must match")
-	afterSent := s.sumCountersForMetricAndLabels("grpc_server_msg_sent_total", "PingList", "server_stream")
-	afterRecv := s.sumCountersForMetricAndLabels("grpc_server_msg_received_total", "PingList", "server_stream")
+	afterSent := sumCountersForMetricAndLabels(s.T(), "grpc_server_msg_sent_total", "PingList", "server_stream")
+	afterRecv := sumCountersForMetricAndLabels(s.T(), "grpc_server_msg_received_total", "PingList", "server_stream")
 
 	assert.EqualValues(s.T(), beforeSent+countListResponses, afterSent, "grpc_server_msg_sent_total should be incremented 20 times for PingList")
 	assert.EqualValues(s.T(), beforeRecv+1, afterRecv, "grpc_server_msg_sent_total should be incremented ones for PingList ")
 }
 
-func (s *ServerInterceptorTestSuite) fetchPrometheusLines(metricName string, matchingLabelValues ...string) []string {
+func fetchPrometheusLines(t *testing.T, metricName string, matchingLabelValues ...string) []string {
 	resp := httptest.NewRecorder()
 	req, err := http.NewRequest("GET", "/", nil)
-	require.NoError(s.T(), err, "failed creating request for Prometheus handler")
+	require.NoError(t, err, "failed creating request for Prometheus handler")
 	prometheus.Handler().ServeHTTP(resp, req)
 	reader := bufio.NewReader(resp.Body)
 	ret := []string{}
@@ -251,7 +248,7 @@ func (s *ServerInterceptorTestSuite) fetchPrometheusLines(metricName string, mat
 		if err == io.EOF {
 			break
 		} else {
-			require.NoError(s.T(), err, "error reading stuff")
+			require.NoError(t, err, "error reading stuff")
 		}
 		if !strings.HasPrefix(line, metricName) {
 			continue
@@ -270,18 +267,13 @@ func (s *ServerInterceptorTestSuite) fetchPrometheusLines(metricName string, mat
 	return ret
 }
 
-func (s *ServerInterceptorTestSuite) sumCountersForMetricAndLabels(metricName string, matchingLabelValues ...string) int {
+func sumCountersForMetricAndLabels(t *testing.T, metricName string, matchingLabelValues ...string) int {
 	count := 0
-	found := false
-	for _, line := range s.fetchPrometheusLines(metricName, matchingLabelValues...) {
+	for _, line := range fetchPrometheusLines(t, metricName, matchingLabelValues...) {
 		valueString := line[strings.LastIndex(line, " ")+1 : len(line)-1]
 		valueFloat, err := strconv.ParseFloat(valueString, 32)
-		require.NoError(s.T(), err, "failed parsing value for line: %v", line)
+		require.NoError(t, err, "failed parsing value for line: %v", line)
 		count += int(valueFloat)
-		found = true
-	}
-	if !found {
-		return -1
 	}
 	return count
 }

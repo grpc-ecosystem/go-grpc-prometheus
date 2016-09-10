@@ -79,7 +79,7 @@ func WithHistogramBuckets(buckets []float64) HistogramOption {
 	return func(o *prom.HistogramOpts) { o.Buckets = buckets }
 }
 
-// EnableHandlingTimeHistogram turns on recording of handling time of RPCs.
+// EnableHandlingTimeHistogram turns on recording of handling time of RPCs for server-side interceptors.
 // Histogram metrics can be very expensive for Prometheus to retain and query.
 func EnableHandlingTimeHistogram(opts ...HistogramOption) {
 	for _, o := range opts {
