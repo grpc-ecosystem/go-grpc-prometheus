@@ -47,7 +47,6 @@ func (s *ClientInterceptorTestSuite) SetupSuite() {
 	pb_testproto.RegisterTestServiceServer(s.server, &testService{t: s.T()})
 
 	go func() {
-		s.T().Logf("starting grpc.Server at: %v", s.serverListener.Addr().String())
 		s.server.Serve(s.serverListener)
 	}()
 
