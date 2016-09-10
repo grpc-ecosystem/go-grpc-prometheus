@@ -5,7 +5,7 @@
 [![GoDoc](http://img.shields.io/badge/GoDoc-Reference-blue.svg)](https://godoc.org/github.com/grpc-ecosystem/go-grpc-prometheus)
 [![Apache 2.0 License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 
-[Prometheus](https://prometheus.io/) monitoring for your [gRPC Go](https://github.com/grpc/grpc-go) servers.
+[Prometheus](https://prometheus.io/) monitoring for your [gRPC Go](https://github.com/grpc/grpc-go) servers and clients.
 
 A sister implementation for [gRPC Java](https://github.com/grpc/grpc-java) (same metrics, same semantics) is in [grpc-ecosystem/java-grpc-prometheus](https://github.com/grpc-ecosystem/java-grpc-prometheus).
 
@@ -19,6 +19,10 @@ To use Interceptors in chains, please see [`go-grpc-middleware`](https://github.
 
 ## Usage
 
+There are two types of interceptors: client-side and server-side. This package provides monitoring Interceptors for both.
+
+### Server-side
+
 ```go
 import "github.com/grpc-ecosystem/go-grpc-prometheus"
 ...
@@ -27,17 +31,35 @@ import "github.com/grpc-ecosystem/go-grpc-prometheus"
         grpc.StreamInterceptor(grpc_prometheus.StreamServerInterceptor),
         grpc.UnaryInterceptor(grpc_prometheus.UnaryServerInterceptor),
     )
+    // Register your gRPC service implementations.
+    myservice.RegisterMyServiceServer(s.server, &myServiceImpl{})
+    // After all your registrations, make sure all of the Prometheus metrics are initialized.
+    grpc_prometheus.Register(myServer)
     // Register Prometheus metrics handler.    
     http.Handle("/metrics", prometheus.Handler())
 ...
 ```
 
-# Metrics
+### Client-side
 
+```go
+import "github.com/grpc-ecosystem/go-grpc-prometheus"
+...
+   clientConn, err = grpc.Dial(
+       address,
+		   grpc.WithUnaryInterceptor(UnaryClientInterceptor),
+		   grpc.WithStreamInterceptor(StreamClientInterceptor)
+   )
+   client = pb_testproto.NewTestServiceClient(clientConn)
+   resp, err := client.PingEmpty(s.ctx, &myservice.Request{Msg: "hello"})
+...
+```
+
+# Metrics
 
 ## Labels
 
-All server-side metrics start with `grpc_server` as Prometheus subsystem name. Similarly all methods
+All server-side metrics start with `grpc_server` as Prometheus subsystem name. All client-side metrics start with `grpc_client`. Both of them have mirror-concepts. Similarly all methods
 contain the same rich labels:
   
   * `grpc_service` - the [gRPC service](http://www.grpc.io/docs/#defining-a-service) name, which is the combination of protobuf `package` and
@@ -65,8 +87,10 @@ Additionally for completed RPCs, the following labels are used:
       
 ## Counters
 
-The counters and their up to date documentation is in [server_reporter.go](server_reporter.go) and
+The counters and their up to date documentation is in [server_reporter.go](server_reporter.go) and [client_reporter.go](client_reporter.go) 
 the respective Prometheus handler (usually `/metrics`). 
+
+For the purpose of this documentation we will only discuss `grpc_server` metrics. The `grpc_client` ones contain mirror concepts.
 
 For simplicity, let's assume we're tracking a single server-side RPC call of [`mwitkow.testproto.TestService`](examples/testproto/test.proto),
 calling the method `PingList`. The call succeeds and returns 20 messages in the stream.
@@ -214,8 +238,7 @@ e.g. "less than 1% of requests are slower than 250ms".
 
 ## Status
 
-This code has been in an upstream [pull request](https://github.com/grpc/grpc-go/pull/299) since August 2015. It has 
-served as the basis for monitoring of production gRPC micro services at [Improbable](https://improbable.io) since then.
+This code has been used since August 2015 as the basis for monitoring of *production* gRPC micro services  at [Improbable](https://improbable.io).
 
 ## License
 
