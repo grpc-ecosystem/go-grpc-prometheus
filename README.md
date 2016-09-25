@@ -116,7 +116,7 @@ each of the 20 messages sent back, a counter will be incremented:
 grpc_server_msg_sent_total{grpc_method="PingList",grpc_service="mwitkow.testproto.TestService",grpc_type="server_stream"} 20
 ```
 
-After the call completes, it's status (`OK` or other [gRPC status code](https://github.com/grpc/grpc-go/blob/master/codes/codes.go)) 
+After the call completes, its status (`OK` or other [gRPC status code](https://github.com/grpc/grpc-go/blob/master/codes/codes.go)) 
 and the relevant call labels increment the `grpc_server_handled_total` counter.
 
 ```jsoniq
@@ -135,7 +135,7 @@ in your server initialization code:
 grpc_prometheus.EnableHandlingTimeHistogram()
 ```
 
-After the call completes, it's handling time will be recorded in a [Prometheus histogram](https://prometheus.io/docs/concepts/metric_types/#histogram)
+After the call completes, its handling time will be recorded in a [Prometheus histogram](https://prometheus.io/docs/concepts/metric_types/#histogram)
 variable `grpc_server_handling_seconds`. It contains three sub-metrics:
 
  * `grpc_server_handling_seconds_count` - the count of all completed RPCs by status and method 
