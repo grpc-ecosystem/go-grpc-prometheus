@@ -126,8 +126,8 @@ grpc_server_handled_total{grpc_code="OK",grpc_method="PingList",grpc_service="mw
 ## Histograms
 
 [Prometheus histograms](https://prometheus.io/docs/concepts/metric_types/#histogram) are a great way
-to measure latency distributions of your RPCs. However since it is bad practice to have metrics
-of [high cardinality](https://prometheus.io/docs/practices/instrumentation/#do-not-overuse-labels))
+to measure latency distributions of your RPCs. However, since it is bad practice to have metrics
+of [high cardinality](https://prometheus.io/docs/practices/instrumentation/#do-not-overuse-labels)
 the latency monitoring metrics are disabled by default. To enable them please call the following
 in your server initialization code:
 
@@ -135,8 +135,8 @@ in your server initialization code:
 grpc_prometheus.EnableHandlingTimeHistogram()
 ```
 
-After the call completes, it's handling time will be recorded in a [Prometheus histogram](https://prometheus.io/docs/concepts/metric_types/#histogram)
-variable `grpc_server_handling_seconds`. It contains three sub-metrics:
+After the call completes, its handling time will be recorded in a [Prometheus histogram](https://prometheus.io/docs/concepts/metric_types/#histogram)
+variable `grpc_server_handling_seconds`. The histogram variable contains three sub-metrics:
 
  * `grpc_server_handling_seconds_count` - the count of all completed RPCs by status and method 
  * `grpc_server_handling_seconds_sum` - cumulative time of RPCs by status and method, useful for 
