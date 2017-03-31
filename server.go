@@ -10,7 +10,7 @@ import (
 	"google.golang.org/grpc"
 )
 
-// PreregisterServices takes a gRPC server and pre-initializes all counters to 0.
+// Register takes a gRPC server and pre-initializes all counters to 0.
 // This allows for easier monitoring in Prometheus (no missing metrics), and should be called *after* all services have
 // been registered with the server.
 func Register(server *grpc.Server) {
