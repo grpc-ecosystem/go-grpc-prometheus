@@ -25,7 +25,7 @@ func UnaryClientInterceptor(ctx context.Context, method string, req, reply inter
 	return err
 }
 
-// StreamServerInterceptor is a gRPC client-side interceptor that provides Prometheus monitoring for Streaming RPCs.
+// StreamClientInterceptor is a gRPC client-side interceptor that provides Prometheus monitoring for Streaming RPCs.
 func StreamClientInterceptor(ctx context.Context, desc *grpc.StreamDesc, cc *grpc.ClientConn, method string, streamer grpc.Streamer, opts ...grpc.CallOption) (grpc.ClientStream, error) {
 	monitor := newClientReporter(clientStreamType(desc), method)
 	clientStream, err := streamer(ctx, desc, cc, method, opts...)
