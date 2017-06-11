@@ -6,6 +6,8 @@ import (
 	"google.golang.org/grpc"
 )
 
+// ServerMetrics represents a collection of metrics to be registered on a
+// Prometheus metrics registry for a gRPC server.
 type ServerMetrics struct {
 	serverStartedCounter          *prom.CounterVec
 	serverHandledCounter          *prom.CounterVec
@@ -16,6 +18,10 @@ type ServerMetrics struct {
 	serverHandledHistogram        *prom.HistogramVec
 }
 
+// NewServerMetrics returns a ServerMetrics object. Use a new instance of
+// ServerMetrics when not using the default Prometheus metrics registry, for
+// example when wanting to control which metrics are added to a registry as
+// opposed to automatically adding metrics via init functions.
 func NewServerMetrics() *ServerMetrics {
 	return &ServerMetrics{
 		serverStartedCounter: prom.NewCounterVec(
@@ -55,6 +61,10 @@ func WithHistogramBuckets(buckets []float64) HistogramOption {
 	return func(o *prom.HistogramOpts) { o.Buckets = buckets }
 }
 
+// EnableHandlingTimeHistogram enables histograms being registered when
+// registering the ServerMetrics on a Prometheus registry. Histograms can be
+// expensive on Prometheus servers. It takes options to configure histogram
+// options such as the defined buckets.
 func (m *ServerMetrics) EnableHandlingTimeHistogram(opts ...HistogramOption) {
 	for _, o := range opts {
 		o(&m.serverHandledHistogramOpts)
@@ -92,6 +102,9 @@ func (m *ServerMetrics) StreamServerInterceptor() func(srv interface{}, ss grpc.
 	}
 }
 
+// InitializeMetrics initializes all metrics, with their appropriate null
+// value, for all gRPC methods registered on a gRPC server. This is useful, to
+// ensure that all metrics exist when collecting and querying.
 func (m *ServerMetrics) InitializeMetrics(server *grpc.Server) {
 	serviceInfo := server.GetServiceInfo()
 	for serviceName, info := range serviceInfo {
@@ -101,6 +114,9 @@ func (m *ServerMetrics) InitializeMetrics(server *grpc.Server) {
 	}
 }
 
+// Register registers all server metrics in a given metrics registry. Depending
+// on histogram options and whether they are enabled, histogram metrics are
+// also registered.
 func (m *ServerMetrics) Register(r prom.Registerer) error {
 	err := r.Register(m.serverStartedCounter)
 	if err != nil {
@@ -129,6 +145,7 @@ func (m *ServerMetrics) Register(r prom.Registerer) error {
 	return nil
 }
 
+// MustRegister tries to register all server metrics and panics on an error.
 func (m *ServerMetrics) MustRegister(r prom.Registerer) {
 	err := m.Register(r)
 	if err != nil {
