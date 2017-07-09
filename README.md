@@ -38,7 +38,7 @@ import "github.com/grpc-ecosystem/go-grpc-prometheus"
     // After all your registrations, make sure all of the Prometheus metrics are initialized.
     grpc_prometheus.Register(myServer)
     // Register Prometheus metrics handler.    
-    http.Handle("/metrics", prometheus.Handler())
+    http.Handle("/metrics", promhttp.Handler())
 ...
 ```
 
