@@ -61,6 +61,32 @@ func NewClientMetrics() *ClientMetrics {
 	}
 }
 
+// Describe sends the super-set of all possible descriptors of metrics
+// collected by this Collector to the provided channel and returns once
+// the last descriptor has been sent.
+func (m *ClientMetrics) Describe(ch chan<- *prom.Desc) {
+	m.clientStartedCounter.Describe(ch)
+	m.clientHandledCounter.Describe(ch)
+	m.clientStreamMsgReceived.Describe(ch)
+	m.clientStreamMsgSent.Describe(ch)
+	if m.clientHandledHistogramEnabled {
+		m.clientHandledHistogram.Describe(ch)
+	}
+}
+
+// Collect is called by the Prometheus registry when collecting
+// metrics. The implementation sends each collected metric via the
+// provided channel and returns once the last metric has been sent.
+func (m *ClientMetrics) Collect(ch chan<- prom.Metric) {
+	m.clientStartedCounter.Collect(ch)
+	m.clientHandledCounter.Collect(ch)
+	m.clientStreamMsgReceived.Collect(ch)
+	m.clientStreamMsgSent.Collect(ch)
+	if m.clientHandledHistogramEnabled {
+		m.clientHandledHistogram.Collect(ch)
+	}
+}
+
 // EnableClientHandlingTimeHistogram turns on recording of handling time of RPCs.
 // Histogram metrics can be very expensive for Prometheus to retain and query.
 func (m *ClientMetrics) EnableClientHandlingTimeHistogram(opts ...HistogramOption) {
