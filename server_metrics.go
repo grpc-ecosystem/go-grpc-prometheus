@@ -78,6 +78,32 @@ func (m *ServerMetrics) EnableHandlingTimeHistogram(opts ...HistogramOption) {
 	m.serverHandledHistogramEnabled = true
 }
 
+// Describe sends the super-set of all possible descriptors of metrics
+// collected by this Collector to the provided channel and returns once
+// the last descriptor has been sent.
+func (m *ServerMetrics) Describe(ch chan<- *prom.Desc) {
+	m.serverStartedCounter.Describe(ch)
+	m.serverHandledCounter.Describe(ch)
+	m.serverStreamMsgReceived.Describe(ch)
+	m.serverStreamMsgSent.Describe(ch)
+	if m.serverHandledHistogramEnabled {
+		m.serverHandledHistogram.Describe(ch)
+	}
+}
+
+// Collect is called by the Prometheus registry when collecting
+// metrics. The implementation sends each collected metric via the
+// provided channel and returns once the last metric has been sent.
+func (m *ServerMetrics) Collect(ch chan<- prom.Metric) {
+	m.serverStartedCounter.Collect(ch)
+	m.serverHandledCounter.Collect(ch)
+	m.serverStreamMsgReceived.Collect(ch)
+	m.serverStreamMsgSent.Collect(ch)
+	if m.serverHandledHistogramEnabled {
+		m.serverHandledHistogram.Collect(ch)
+	}
+}
+
 // UnaryServerInterceptor is a gRPC server-side interceptor that provides Prometheus monitoring for Unary RPCs.
 func (m *ServerMetrics) UnaryServerInterceptor() func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
 	return func(ctx context.Context, req interface{}, info *grpc.UnaryServerInfo, handler grpc.UnaryHandler) (interface{}, error) {
@@ -117,40 +143,21 @@ func (m *ServerMetrics) InitializeMetrics(server *grpc.Server) {
 // Register registers all server metrics in a given metrics registry. Depending
 // on histogram options and whether they are enabled, histogram metrics are
 // also registered.
+//
+// Deprecated: ServerMetrics implements Prometheus Collector interface. You can
+// register an instance of ServerMetrics directly by using
+// prometheus.Register(m).
 func (m *ServerMetrics) Register(r prom.Registerer) error {
-	err := r.Register(m.serverStartedCounter)
-	if err != nil {
-		return err
-	}
-	err = r.Register(m.serverHandledCounter)
-	if err != nil {
-		return err
-	}
-	err = r.Register(m.serverStreamMsgReceived)
-	if err != nil {
-		return err
-	}
-	err = r.Register(m.serverStreamMsgSent)
-	if err != nil {
-		return err
-	}
-
-	if m.serverHandledHistogramEnabled {
-		err = r.Register(m.serverHandledHistogram)
-		if err != nil {
-			return err
-		}
-	}
-
-	return nil
+	return r.Register(m)
 }
 
 // MustRegister tries to register all server metrics and panics on an error.
+//
+// Deprecated: ServerMetrics implements Prometheus Collector interface. You can
+// register an instance of ServerMetrics directly by using
+// prometheus.MustRegister(m).
 func (m *ServerMetrics) MustRegister(r prom.Registerer) {
-	err := m.Register(r)
-	if err != nil {
-		panic(err)
-	}
+	r.MustRegister(m)
 }
 
 func streamRpcType(info *grpc.StreamServerInfo) grpcType {
