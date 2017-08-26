@@ -4,6 +4,7 @@ go:
   - 1.6.x
   - 1.7.x
   - 1.8.x
+  - master
 
 install:
   - go get github.com/prometheus/client_golang/prometheus
