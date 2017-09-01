@@ -10,23 +10,16 @@ import (
 	"google.golang.org/grpc"
 )
 
-// Server defines the interface that is required for grpc_prometheus to Register.
-type Server interface {
+// prometheusServer defines the interface that is required for grpc_prometheus to Register.
+type prometheusServer interface {
 	GetServiceInfo() map[string]grpc.ServiceInfo
 }
 
-// Register takes a gRPC server and pre-initializes all counters to 0.
+// Register takes a prometheusServer and pre-initializes all counters to 0.
 // This allows for easier monitoring in Prometheus (no missing metrics), and
 // should be called *after* all services have been registered with the server.
-func Register(server Server) {
-	RegisterServiceInfo(server.GetServiceInfo())
-}
-
-// RegisterServiceInfo takes a map of gRPC ServiceInfo objects and per-initializes all counters to 0.
-// This allows for easier monitoring in Prometheus (no missing metrics), and
-// should be called *after* all services have been registered with the server.
-func RegisterServiceInfo(serviceInfo map[string]grpc.ServiceInfo) {
-	for serviceName, info := range serviceInfo {
+func Register(server prometheusServer) {
+	for serviceName, info := range server.GetServiceInfo() {
 		for _, mInfo := range info.Methods {
 			preRegisterMethod(serviceName, &mInfo)
 		}
