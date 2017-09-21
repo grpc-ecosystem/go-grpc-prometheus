@@ -62,6 +62,24 @@ func WithHistogramBuckets(buckets []float64) HistogramOption {
 	return func(o *prom.HistogramOpts) { o.Buckets = buckets }
 }
 
+func WithHistogramConstLabels(labels prom.Labels) HistogramOption {
+	return func(o *prom.HistogramOpts) {
+		o.ConstLabels = labels
+	}
+}
+
+func WithHistogramSubsystem(subsystem string) HistogramOption {
+	return func(o *prom.HistogramOpts) {
+		o.Subsystem = subsystem
+	}
+}
+
+func WithHistogramNamespace(ns string) HistogramOption {
+	return func(o *prom.HistogramOpts) {
+		o.Namespace = ns
+	}
+}
+
 // EnableHandlingTimeHistogram enables histograms being registered when
 // registering the ServerMetrics on a Prometheus registry. Histograms can be
 // expensive on Prometheus servers. It takes options to configure histogram
