@@ -49,8 +49,8 @@ import "github.com/grpc-ecosystem/go-grpc-prometheus"
 ...
    clientConn, err = grpc.Dial(
        address,
-		   grpc.WithUnaryInterceptor(UnaryClientInterceptor),
-		   grpc.WithStreamInterceptor(StreamClientInterceptor)
+		   grpc.WithUnaryInterceptor(grpc_prometheus.UnaryClientInterceptor),
+		   grpc.WithStreamInterceptor(grpc_prometheus.StreamClientInterceptor)
    )
    client = pb_testproto.NewTestServiceClient(clientConn)
    resp, err := client.PingEmpty(s.ctx, &myservice.Request{Msg: "hello"})
