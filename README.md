@@ -165,6 +165,33 @@ grpc_server_handling_seconds_sum{grpc_code="OK",grpc_method="PingList",grpc_serv
 grpc_server_handling_seconds_count{grpc_code="OK",grpc_method="PingList",grpc_service="mwitkow.testproto.TestService",grpc_type="server_stream"} 1
 ```
 
+## Summaries
+[Summaries](https://prometheus.io/docs/concepts/metric_types/#summary) are another way to measure latency distribution.
+
+In contrast to Histogram, Summary calculates configurable quantiles over a sliding time window. Use Summaries if you need an accurate quantile, no matter what the range and distribution of the values is.
+
+To enable them please call the following in your server initialization code:
+
+```jsoniq
+grpc_prometheus.EnableHandlingTimeSummary()
+```
+
+After the call completes, it's handling time will be recorded in a [Prometheus summary](https://prometheus.io/docs/concepts/metric_types/#summary)
+variable `grpc_server_handling_seconds_summary`. It contains three sub-metrics:
+
+ * `grpc_server_handling_seconds_summary_count` - the count of all completed RPCs by status and method
+ * `grpc_server_handling_seconds_summary_sum` - cumulative time of RPCs by status and method, useful for calculating average handling times
+ * `grpc_server_handling_seconds_summary` - contains [quantiles](https://prometheus.io/docs/practices/histograms/#quantiles) of RPCs handling-time by status and method
+
+The counter values will look like as follows:
+
+```jsoniq
+grpc_server_handling_seconds_summary{grpc_code="OK",grpc_method="PingList",grpc_service="mwitkow.testproto.TestService",grpc_type="server_stream",quantile="0.5"} 0.0003866430000000001
+grpc_server_handling_seconds_summary{grpc_code="OK",grpc_method="PingList",grpc_service="mwitkow.testproto.TestService",grpc_type="server_stream",quantile="0.9"} 0.0003866430000000001
+grpc_server_handling_seconds_summary{grpc_code="OK",grpc_method="PingList",grpc_service="mwitkow.testproto.TestService",grpc_type="server_stream",quantile="0.99"} 0.0003866430000000001
+grpc_server_handling_seconds_summary_sum{grpc_code="OK",grpc_method="PingList",grpc_service="mwitkow.testproto.TestService",grpc_type="server_stream"} 0.0003866430000000001
+grpc_server_handling_seconds_summary_count{grpc_code="OK",grpc_method="PingList",grpc_service="mwitkow.testproto.TestService",grpc_type="server_stream"} 1
+```
 
 ## Useful query examples
 
