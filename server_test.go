@@ -52,6 +52,7 @@ func (s *ServerInterceptorTestSuite) SetupSuite() {
 	var err error
 
 	EnableHandlingTimeHistogram()
+	EnableHandlingTimeSummary()
 
 	s.serverListener, err = net.Listen("tcp", "127.0.0.1:0")
 	require.NoError(s.T(), err, "must be able to allocate a port for serverListener")
@@ -103,6 +104,9 @@ func (s *ServerInterceptorTestSuite) TestRegisterPresetsStuff() {
 		{"grpc_server_msg_sent_total", []string{"mwitkow.testproto.TestService", "PingEmpty", "unary"}},
 		{"grpc_server_handling_seconds_sum", []string{"mwitkow.testproto.TestService", "PingEmpty", "unary"}},
 		{"grpc_server_handling_seconds_count", []string{"mwitkow.testproto.TestService", "PingList", "server_stream"}},
+		{"grpc_server_handling_seconds_summary", []string{"mwitkow.testproto.TestService", "PingEmpty", "unary", "0.5"}},
+		{"grpc_server_handling_seconds_summary", []string{"mwitkow.testproto.TestService", "PingEmpty", "unary", "0.9"}},
+		{"grpc_server_handling_seconds_summary", []string{"mwitkow.testproto.TestService", "PingEmpty", "unary", "0.99"}},
 		{"grpc_server_handled_total", []string{"mwitkow.testproto.TestService", "PingList", "server_stream", "OutOfRange"}},
 		{"grpc_server_handled_total", []string{"mwitkow.testproto.TestService", "PingList", "server_stream", "Aborted"}},
 		{"grpc_server_handled_total", []string{"mwitkow.testproto.TestService", "PingEmpty", "unary", "FailedPrecondition"}},
@@ -156,6 +160,21 @@ func (s *ServerInterceptorTestSuite) TestUnaryIncrementsHistograms() {
 	s.testClient.PingError(s.ctx, &pb_testproto.PingRequest{ErrorCodeReturned: uint32(codes.FailedPrecondition)}) // should return with code=FailedPrecondition
 	after = sumCountersForMetricAndLabels(s.T(), "grpc_server_handling_seconds_count", "PingError", "unary")
 	assert.EqualValues(s.T(), before+1, after, "grpc_server_handling_seconds_count should be incremented for PingError")
+}
+
+func (s *ServerInterceptorTestSuite) TestUnaryIncrementsSummary() {
+	var before int
+	var after int
+
+	before = sumCountersForMetricAndLabels(s.T(), "grpc_server_handling_seconds_summary_count", "PingEmpty", "unary")
+	s.testClient.PingEmpty(s.ctx, &pb_testproto.Empty{}) // should return with code=OK
+	after = sumCountersForMetricAndLabels(s.T(), "grpc_server_handling_seconds_summary_count", "PingEmpty", "unary")
+	assert.EqualValues(s.T(), before+1, after, "grpc_server_handled_count should be incremented for PingEmpty")
+
+	before = sumCountersForMetricAndLabels(s.T(), "grpc_server_handling_seconds_summary_count", "PingError", "unary")
+	s.testClient.PingError(s.ctx, &pb_testproto.PingRequest{ErrorCodeReturned: uint32(codes.FailedPrecondition)}) // should return with code=FailedPrecondition
+	after = sumCountersForMetricAndLabels(s.T(), "grpc_server_handling_seconds_summary_count", "PingError", "unary")
+	assert.EqualValues(s.T(), before+1, after, "grpc_server_handling_seconds_summary_count should be incremented for PingError")
 }
 
 func (s *ServerInterceptorTestSuite) TestStreamingIncrementsStarted() {

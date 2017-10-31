@@ -22,7 +22,7 @@ func newClientReporter(m *ClientMetrics, rpcType grpcType, fullMethod string) *c
 		metrics: m,
 		rpcType: rpcType,
 	}
-	if r.metrics.clientHandledHistogramEnabled {
+	if r.metrics.clientHandledHistogramEnabled || r.metrics.clientHandledSummaryEnabled {
 		r.startTime = time.Now()
 	}
 	r.serviceName, r.methodName = splitMethodName(fullMethod)
@@ -42,5 +42,8 @@ func (r *clientReporter) Handled(code codes.Code) {
 	r.metrics.clientHandledCounter.WithLabelValues(string(r.rpcType), r.serviceName, r.methodName, code.String()).Inc()
 	if r.metrics.clientHandledHistogramEnabled {
 		r.metrics.clientHandledHistogram.WithLabelValues(string(r.rpcType), r.serviceName, r.methodName).Observe(time.Since(r.startTime).Seconds())
+	}
+	if r.metrics.clientHandledSummaryEnabled {
+		r.metrics.clientHandledSummary.WithLabelValues(string(r.rpcType), r.serviceName, r.methodName).Observe(time.Since(r.startTime).Seconds())
 	}
 }
