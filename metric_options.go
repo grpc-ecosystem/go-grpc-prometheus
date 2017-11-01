@@ -32,3 +32,28 @@ func WithNamespace(ns string) CounterOption {
 		o.Namespace = ns
 	}
 }
+
+type HistogramOption func(*prom.HistogramOpts)
+
+// WithHistogramBuckets allows you to specify custom bucket ranges for histograms if EnableHandlingTimeHistogram is on.
+func WithHistogramBuckets(buckets []float64) HistogramOption {
+	return func(o *prom.HistogramOpts) { o.Buckets = buckets }
+}
+
+func WithHistogramConstLabels(labels prom.Labels) HistogramOption {
+	return func(o *prom.HistogramOpts) {
+		o.ConstLabels = labels
+	}
+}
+
+func WithHistogramSubsystem(subsystem string) HistogramOption {
+	return func(o *prom.HistogramOpts) {
+		o.Subsystem = subsystem
+	}
+}
+
+func WithHistogramNamespace(ns string) HistogramOption {
+	return func(o *prom.HistogramOpts) {
+		o.Namespace = ns
+	}
+}
