@@ -35,9 +35,10 @@ type prometheusServer interface {
 	GetServiceInfo() map[string]grpc.ServiceInfo
 }
 
-// Register takes a prometheusServer and pre-initializes all counters to 0.
-// This allows for easier monitoring in Prometheus (no missing metrics), and
-// should be called *after* all services have been registered with the server.
+// Register takes a gRPC server (or any other struct that meets the
+// prometheusServer interface) and pre-initializes all counters to 0. This
+// allows for easier monitoring in Prometheus (no missing metrics), and should
+// be called *after* all services have been registered with the server.
 func Register(server prometheusServer) {
 	DefaultServerMetrics.InitializeMetrics(server)
 }

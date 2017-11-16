@@ -129,8 +129,9 @@ func (m *ServerMetrics) StreamServerInterceptor() func(srv interface{}, ss grpc.
 }
 
 // InitializeMetrics initializes all metrics, with their appropriate null
-// value, for all gRPC methods registered on a prometheusServer. This is useful, to
-// ensure that all metrics exist when collecting and querying.
+// value, for all gRPC methods registered on a gRPC server (or any other
+// struct that meets the prometheusServer interface). This is useful, to ensure
+// that all metrics exist when collecting and querying.
 func (m *ServerMetrics) InitializeMetrics(server prometheusServer) {
 	serviceInfo := server.GetServiceInfo()
 	for serviceName, info := range serviceInfo {
