@@ -16,6 +16,9 @@ type ServerMetrics struct {
 	serverHandledHistogramEnabled bool
 	serverHandledHistogramOpts    prom.HistogramOpts
 	serverHandledHistogram        *prom.HistogramVec
+	serverHandledSummaryEnabled   bool
+	serverHandledSummaryOpts      prom.SummaryOpts
+	serverHandledSummary          *prom.SummaryVec
 }
 
 // NewServerMetrics returns a ServerMetrics object. Use a new instance of
@@ -50,7 +53,14 @@ func NewServerMetrics() *ServerMetrics {
 			Help:    "Histogram of response latency (seconds) of gRPC that had been application-level handled by the server.",
 			Buckets: prom.DefBuckets,
 		},
-		serverHandledHistogram: nil,
+		serverHandledHistogram:      nil,
+		serverHandledSummaryEnabled: false,
+		serverHandledSummaryOpts: prom.SummaryOpts{
+			Name:       "grpc_server_handling_seconds_summary",
+			Help:       "Summary of response latency (seconds) of gRPC that had been application-level handled by the server.",
+			Objectives: map[float64]float64{0.5: 0.05, 0.9: 0.01, 0.99: 0.001},
+		},
+		serverHandledSummary: nil,
 	}
 }
 
@@ -59,6 +69,13 @@ type HistogramOption func(*prom.HistogramOpts)
 // WithHistogramBuckets allows you to specify custom bucket ranges for histograms if EnableHandlingTimeHistogram is on.
 func WithHistogramBuckets(buckets []float64) HistogramOption {
 	return func(o *prom.HistogramOpts) { o.Buckets = buckets }
+}
+
+type SummaryOption func(*prom.SummaryOpts)
+
+// WithSummaryObjectives allows you to specify custom objectives for summaries if EnableHandlingTimeSummary is on.
+func WithSummaryObjectives(objectives map[float64]float64) SummaryOption {
+	return func(o *prom.SummaryOpts) { o.Objectives = objectives }
 }
 
 // EnableHandlingTimeHistogram enables histograms being registered when
@@ -78,6 +95,23 @@ func (m *ServerMetrics) EnableHandlingTimeHistogram(opts ...HistogramOption) {
 	m.serverHandledHistogramEnabled = true
 }
 
+// EnableHandlingTimeSummary enables summaries being registered when
+// registering the ServerMetrics on a Prometheus registry. Summaries can be
+// expensive on Prometheus servers. It takes options to configure summary
+// options such as the defined buckets.
+func (m *ServerMetrics) EnableHandlingTimeSummary(opts ...SummaryOption) {
+	for _, o := range opts {
+		o(&m.serverHandledSummaryOpts)
+	}
+	if !m.serverHandledSummaryEnabled {
+		m.serverHandledSummary = prom.NewSummaryVec(
+			m.serverHandledSummaryOpts,
+			[]string{"grpc_type", "grpc_service", "grpc_method"},
+		)
+	}
+	m.serverHandledSummaryEnabled = true
+}
+
 // Describe sends the super-set of all possible descriptors of metrics
 // collected by this Collector to the provided channel and returns once
 // the last descriptor has been sent.
@@ -88,6 +122,9 @@ func (m *ServerMetrics) Describe(ch chan<- *prom.Desc) {
 	m.serverStreamMsgSent.Describe(ch)
 	if m.serverHandledHistogramEnabled {
 		m.serverHandledHistogram.Describe(ch)
+	}
+	if m.serverHandledSummaryEnabled {
+		m.serverHandledSummary.Describe(ch)
 	}
 }
 
@@ -101,6 +138,9 @@ func (m *ServerMetrics) Collect(ch chan<- prom.Metric) {
 	m.serverStreamMsgSent.Collect(ch)
 	if m.serverHandledHistogramEnabled {
 		m.serverHandledHistogram.Collect(ch)
+	}
+	if m.serverHandledSummaryEnabled {
+		m.serverHandledSummary.Collect(ch)
 	}
 }
 
@@ -201,6 +241,9 @@ func preRegisterMethod(metrics *ServerMetrics, serviceName string, mInfo *grpc.M
 	metrics.serverStreamMsgSent.GetMetricWithLabelValues(methodType, serviceName, methodName)
 	if metrics.serverHandledHistogramEnabled {
 		metrics.serverHandledHistogram.GetMetricWithLabelValues(methodType, serviceName, methodName)
+	}
+	if metrics.serverHandledSummaryEnabled {
+		metrics.serverHandledSummary.GetMetricWithLabelValues(methodType, serviceName, methodName)
 	}
 	for _, code := range allCodes {
 		metrics.serverHandledCounter.GetMetricWithLabelValues(methodType, serviceName, methodName, code.String())
