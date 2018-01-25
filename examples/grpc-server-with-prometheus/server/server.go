@@ -1,18 +1,18 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"net"
 	"net/http"
 
 	"github.com/soheilhy/cmux"
+	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 
-	pb "github.com/fengzixu/grpc-server-with-prometheus/protobuf"
-	"github.com/fengzixu/grpc-server-with-prometheus/util"
 	"github.com/grpc-ecosystem/go-grpc-prometheus"
+	pb "github.com/grpc-ecosystem/go-grpc-prometheus/examples/grpc-server-with-prometheus/protobuf"
+	"github.com/grpc-ecosystem/go-grpc-prometheus/examples/grpc-server-with-prometheus/util"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )

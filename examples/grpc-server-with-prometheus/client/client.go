@@ -1,16 +1,16 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"log"
 	"strconv"
 
+	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 
-	pb "github.com/fengzixu/grpc-server-with-prometheus/protobuf"
-	"github.com/fengzixu/grpc-server-with-prometheus/util"
 	"github.com/grpc-ecosystem/go-grpc-prometheus"
+	pb "github.com/grpc-ecosystem/go-grpc-prometheus/examples/grpc-server-with-prometheus/protobuf"
+	"github.com/grpc-ecosystem/go-grpc-prometheus/examples/grpc-server-with-prometheus/util"
 )
 
 func main() {
