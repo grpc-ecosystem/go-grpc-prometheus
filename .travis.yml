@@ -11,7 +11,7 @@ install:
   - go get google.golang.org/grpc
   - go get golang.org/x/net/context
   - go get github.com/stretchr/testify
-
+  - go get github.com/soheilhy/cmux
 script:
  - ./test_all.sh
 
