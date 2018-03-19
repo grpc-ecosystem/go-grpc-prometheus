@@ -22,28 +22,29 @@ type ServerMetrics struct {
 // ServerMetrics when not using the default Prometheus metrics registry, for
 // example when wanting to control which metrics are added to a registry as
 // opposed to automatically adding metrics via init functions.
-func NewServerMetrics() *ServerMetrics {
+func NewServerMetrics(counterOpts ...CounterOption) *ServerMetrics {
+	opts := counterOptions(counterOpts)
 	return &ServerMetrics{
 		serverStartedCounter: prom.NewCounterVec(
-			prom.CounterOpts{
+			opts.apply(prom.CounterOpts{
 				Name: "grpc_server_started_total",
 				Help: "Total number of RPCs started on the server.",
-			}, []string{"grpc_type", "grpc_service", "grpc_method"}),
+			}), []string{"grpc_type", "grpc_service", "grpc_method"}),
 		serverHandledCounter: prom.NewCounterVec(
-			prom.CounterOpts{
+			opts.apply(prom.CounterOpts{
 				Name: "grpc_server_handled_total",
 				Help: "Total number of RPCs completed on the server, regardless of success or failure.",
-			}, []string{"grpc_type", "grpc_service", "grpc_method", "grpc_code"}),
+			}), []string{"grpc_type", "grpc_service", "grpc_method", "grpc_code"}),
 		serverStreamMsgReceived: prom.NewCounterVec(
-			prom.CounterOpts{
+			opts.apply(prom.CounterOpts{
 				Name: "grpc_server_msg_received_total",
 				Help: "Total number of RPC stream messages received on the server.",
-			}, []string{"grpc_type", "grpc_service", "grpc_method"}),
+			}), []string{"grpc_type", "grpc_service", "grpc_method"}),
 		serverStreamMsgSent: prom.NewCounterVec(
-			prom.CounterOpts{
+			opts.apply(prom.CounterOpts{
 				Name: "grpc_server_msg_sent_total",
 				Help: "Total number of gRPC stream messages sent by the server.",
-			}, []string{"grpc_type", "grpc_service", "grpc_method"}),
+			}), []string{"grpc_type", "grpc_service", "grpc_method"}),
 		serverHandledHistogramEnabled: false,
 		serverHandledHistogramOpts: prom.HistogramOpts{
 			Name:    "grpc_server_handling_seconds",
@@ -52,13 +53,6 @@ func NewServerMetrics() *ServerMetrics {
 		},
 		serverHandledHistogram: nil,
 	}
-}
-
-type HistogramOption func(*prom.HistogramOpts)
-
-// WithHistogramBuckets allows you to specify custom bucket ranges for histograms if EnableHandlingTimeHistogram is on.
-func WithHistogramBuckets(buckets []float64) HistogramOption {
-	return func(o *prom.HistogramOpts) { o.Buckets = buckets }
 }
 
 // EnableHandlingTimeHistogram enables histograms being registered when

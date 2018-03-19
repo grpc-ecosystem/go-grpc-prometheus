@@ -25,31 +25,32 @@ type ClientMetrics struct {
 // ClientMetrics when not using the default Prometheus metrics registry, for
 // example when wanting to control which metrics are added to a registry as
 // opposed to automatically adding metrics via init functions.
-func NewClientMetrics() *ClientMetrics {
+func NewClientMetrics(counterOpts ...CounterOption) *ClientMetrics {
+	opts := counterOptions(counterOpts)
 	return &ClientMetrics{
 		clientStartedCounter: prom.NewCounterVec(
-			prom.CounterOpts{
+			opts.apply(prom.CounterOpts{
 				Name: "grpc_client_started_total",
 				Help: "Total number of RPCs started on the client.",
-			}, []string{"grpc_type", "grpc_service", "grpc_method"}),
+			}), []string{"grpc_type", "grpc_service", "grpc_method"}),
 
 		clientHandledCounter: prom.NewCounterVec(
-			prom.CounterOpts{
+			opts.apply(prom.CounterOpts{
 				Name: "grpc_client_handled_total",
 				Help: "Total number of RPCs completed by the client, regardless of success or failure.",
-			}, []string{"grpc_type", "grpc_service", "grpc_method", "grpc_code"}),
+			}), []string{"grpc_type", "grpc_service", "grpc_method", "grpc_code"}),
 
 		clientStreamMsgReceived: prom.NewCounterVec(
-			prom.CounterOpts{
+			opts.apply(prom.CounterOpts{
 				Name: "grpc_client_msg_received_total",
 				Help: "Total number of RPC stream messages received by the client.",
-			}, []string{"grpc_type", "grpc_service", "grpc_method"}),
+			}), []string{"grpc_type", "grpc_service", "grpc_method"}),
 
 		clientStreamMsgSent: prom.NewCounterVec(
-			prom.CounterOpts{
+			opts.apply(prom.CounterOpts{
 				Name: "grpc_client_msg_sent_total",
 				Help: "Total number of gRPC stream messages sent by the client.",
-			}, []string{"grpc_type", "grpc_service", "grpc_method"}),
+			}), []string{"grpc_type", "grpc_service", "grpc_method"}),
 
 		clientHandledHistogramEnabled: false,
 		clientHandledHistogramOpts: prom.HistogramOpts{
