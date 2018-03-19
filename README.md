@@ -168,7 +168,7 @@ grpc_server_handling_seconds_count{grpc_code="OK",grpc_method="PingList",grpc_se
 
 ## Useful query examples
 
-Prometheus philosophy is to provide the most detailed metrics possible to the monitoring system, and
+Prometheus philosophy is to provide raw metrics to the monitoring system, and
 let the aggregations be handled there. The verbosity of above metrics make it possible to have that
 flexibility. Here's a couple of useful monitoring queries:
 
