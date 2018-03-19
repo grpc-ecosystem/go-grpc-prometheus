@@ -3,33 +3,36 @@ package main
 import (
 	"fmt"
 	"log"
-	"strconv"
 
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 
 	"github.com/grpc-ecosystem/go-grpc-prometheus"
 	pb "github.com/grpc-ecosystem/go-grpc-prometheus/examples/grpc-server-with-prometheus/protobuf"
-	"github.com/grpc-ecosystem/go-grpc-prometheus/examples/grpc-server-with-prometheus/util"
 )
 
 func main() {
-	// Create a gRPC channel to communicate with the server
+
+	// Create a insecure gRPC channel to communicate with the server.
 	conn, err := grpc.Dial(
-		"localhost:"+strconv.FormatInt(util.SERVER_PORT, 10),
+		fmt.Sprintf("localhost:%v", 9093),
 		grpc.WithInsecure(),
-		// For grpc_prometheus
 		grpc.WithUnaryInterceptor(grpc_prometheus.UnaryClientInterceptor),
-		grpc.WithStreamInterceptor(grpc_prometheus.StreamClientInterceptor))
-	defer conn.Close()
+		grpc.WithStreamInterceptor(grpc_prometheus.StreamClientInterceptor),
+	)
 
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	client := pb.NewDemoServiceClient(conn)
+	defer func() {
+		if err == nil {
+			conn.Close()
+		}
+	}()
 
-	// Call “SayHello” method and wait for response from gRPC Server
+	client := pb.NewDemoServiceClient(conn)
+	// Call “SayHello” method and wait for response from gRPC Server.
 	resp, err := client.SayHello(context.Background(), &pb.HelloRequest{Name: "test"})
 	if err != nil {
 		log.Fatal(err)
