@@ -36,6 +36,7 @@ var (
 	})
 )
 
+// NOTE: Graceful shutdown is missing. Don't use this demo to your production.
 func main() {
 	// Listen an actual port.
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", 9093))
