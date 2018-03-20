@@ -28,18 +28,13 @@ func (s *DemoServiceServer) SayHello(ctx context.Context, request *pb.HelloReque
 	return &pb.HelloResponse{Message: fmt.Sprintf("Hello %s", request.Name)}, nil
 }
 
-// Create a counter metric
+// Create a customized counter metric.
 var (
 	pushCounter = prometheus.NewCounter(prometheus.CounterOpts{
-		Name: "repository_pushes",
-		Help: "Number of pushes to external repository.",
+		Name: "demo_server_say_hello_method_handle_count",
+		Help: "Total number of RPCs handled on the server.",
 	})
 )
-
-func init() {
-	// Metrics have to be registered to be exposed:
-	prometheus.MustRegister(pushCounter)
-}
 
 func main() {
 	// Listen an actual port.
@@ -47,24 +42,35 @@ func main() {
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
+	defer lis.Close()
+
+	// Create a metrics registry.
+	reg := prometheus.NewRegistry()
+
+	// Create some standard server metrics.
+	grpcMetrics := grpc_prometheus.NewServerMetrics()
+
+	// Register standard server metrics and customized metrics to registry.
+	reg.MustRegister(grpcMetrics)
+	reg.MustRegister(pushCounter)
 
 	// Create a HTTP server for prometheus.
-	httpServer := &http.Server{Handler: promhttp.Handler(), Addr: fmt.Sprintf("0.0.0.0:%d", 9092)}
+	httpServer := &http.Server{Handler: promhttp.HandlerFor(reg, promhttp.HandlerOpts{}), Addr: fmt.Sprintf("0.0.0.0:%d", 9092)}
 
 	// Create a gRPC Server with gRPC interceptor.
 	grpcServer := grpc.NewServer(
-		grpc.StreamInterceptor(grpc_prometheus.StreamServerInterceptor),
-		grpc.UnaryInterceptor(grpc_prometheus.UnaryServerInterceptor),
+		grpc.StreamInterceptor(grpcMetrics.StreamServerInterceptor()),
+		grpc.UnaryInterceptor(grpcMetrics.UnaryServerInterceptor()),
 	)
 
+	// Create a new api server.
+	demoServer := newDemoServer()
+
 	// Register your service.
-	pb.RegisterDemoServiceServer(grpcServer, newDemoServer())
+	pb.RegisterDemoServiceServer(grpcServer, demoServer)
 
-	// Enable Histogram for gRPC-Prometheus interceptor.
-	grpc_prometheus.EnableHandlingTimeHistogram()
-
-	// Register your gRPC Server to gRPC-Prometheus interceptor.
-	grpc_prometheus.Register(grpcServer)
+	// Initialize all metrics.
+	grpcMetrics.InitializeMetrics(grpcServer)
 
 	// Start your http server for prometheus.
 	go func() {

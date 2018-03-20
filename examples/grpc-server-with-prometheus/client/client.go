@@ -12,25 +12,24 @@ import (
 )
 
 func main() {
-
+	// Create a standard client metrics object.
+	grpcMetrics := grpc_prometheus.NewClientMetrics()
 	// Create a insecure gRPC channel to communicate with the server.
 	conn, err := grpc.Dial(
 		fmt.Sprintf("localhost:%v", 9093),
 		grpc.WithInsecure(),
-		grpc.WithUnaryInterceptor(grpc_prometheus.UnaryClientInterceptor),
-		grpc.WithStreamInterceptor(grpc_prometheus.StreamClientInterceptor),
+		grpc.WithUnaryInterceptor(grpcMetrics.UnaryClientInterceptor()),
+		grpc.WithStreamInterceptor(grpcMetrics.StreamClientInterceptor()),
 	)
-
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	defer func() {
-		if err == nil {
-			conn.Close()
-		}
+		conn.Close()
 	}()
 
+	// Create a gRPC server client.
 	client := pb.NewDemoServiceClient(conn)
 	// Call “SayHello” method and wait for response from gRPC Server.
 	resp, err := client.SayHello(context.Background(), &pb.HelloRequest{Name: "test"})
