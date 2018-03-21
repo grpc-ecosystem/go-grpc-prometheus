@@ -24,19 +24,31 @@ func newDemoServer() *DemoServiceServer {
 
 // SayHello implements a interface defined by protobuf.
 func (s *DemoServiceServer) SayHello(ctx context.Context, request *pb.HelloRequest) (*pb.HelloResponse, error) {
-	pushCounter.Inc()
+	customizedCounterMetric.WithLabelValues(request.Name).Inc()
 	return &pb.HelloResponse{Message: fmt.Sprintf("Hello %s", request.Name)}, nil
 }
 
-// Create a customized counter metric.
 var (
-	pushCounter = prometheus.NewCounter(prometheus.CounterOpts{
+	// Create a metrics registry.
+	reg = prometheus.NewRegistry()
+
+	// Create some standard server metrics.
+	grpcMetrics = grpc_prometheus.NewServerMetrics()
+
+	// Create a customized counter metric.
+	customizedCounterMetric = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Name: "demo_server_say_hello_method_handle_count",
 		Help: "Total number of RPCs handled on the server.",
-	})
+	}, []string{"request_info"})
 )
 
-// NOTE: Graceful shutdown is missing. Don't use this demo to your production.
+func init() {
+	// Register standard server metrics and customized metrics to registry.
+	reg.MustRegister(grpcMetrics, customizedCounterMetric)
+	customizedCounterMetric.WithLabelValues("request_info")
+}
+
+// NOTE: Graceful shutdown is missing. Don't use this demo in your production setup.
 func main() {
 	// Listen an actual port.
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%d", 9093))
@@ -44,16 +56,6 @@ func main() {
 		log.Fatalf("failed to listen: %v", err)
 	}
 	defer lis.Close()
-
-	// Create a metrics registry.
-	reg := prometheus.NewRegistry()
-
-	// Create some standard server metrics.
-	grpcMetrics := grpc_prometheus.NewServerMetrics()
-
-	// Register standard server metrics and customized metrics to registry.
-	reg.MustRegister(grpcMetrics)
-	reg.MustRegister(pushCounter)
 
 	// Create a HTTP server for prometheus.
 	httpServer := &http.Server{Handler: promhttp.HandlerFor(reg, promhttp.HandlerOpts{}), Addr: fmt.Sprintf("0.0.0.0:%d", 9092)}
