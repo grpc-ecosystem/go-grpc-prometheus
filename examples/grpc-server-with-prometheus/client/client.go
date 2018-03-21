@@ -30,7 +30,7 @@ func main() {
 	// Create a gRPC server client.
 	client := pb.NewDemoServiceClient(conn)
 	// Call “SayHello” method and wait for response from gRPC Server.
-	resp, err := client.SayHello(context.Background(), &pb.HelloRequest{Name: "request_info"})
+	resp, err := client.SayHello(context.Background(), &pb.HelloRequest{Name: "test_metric"})
 	if err != nil {
 		log.Fatal(err)
 	}

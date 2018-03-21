@@ -39,13 +39,13 @@ var (
 	customizedCounterMetric = prometheus.NewCounterVec(prometheus.CounterOpts{
 		Name: "demo_server_say_hello_method_handle_count",
 		Help: "Total number of RPCs handled on the server.",
-	}, []string{"request_info"})
+	}, []string{"test_metrics"})
 )
 
 func init() {
 	// Register standard server metrics and customized metrics to registry.
 	reg.MustRegister(grpcMetrics, customizedCounterMetric)
-	customizedCounterMetric.WithLabelValues("request_info")
+	customizedCounterMetric.WithLabelValues("test_metric")
 }
 
 // NOTE: Graceful shutdown is missing. Don't use this demo in your production setup.
