@@ -7,7 +7,6 @@ import (
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 
-	"github.com/grpc-ecosystem/go-grpc-prometheus"
 	pb "github.com/grpc-ecosystem/go-grpc-prometheus/examples/grpc-server-with-prometheus/protobuf"
 )
 
@@ -16,8 +15,6 @@ func main() {
 	conn, err := grpc.Dial(
 		fmt.Sprintf("localhost:%v", 9093),
 		grpc.WithInsecure(),
-		grpc.WithUnaryInterceptor(grpc_prometheus.UnaryClientInterceptor),
-		grpc.WithStreamInterceptor(grpc_prometheus.StreamClientInterceptor),
 	)
 	if err != nil {
 		log.Fatal(err)
