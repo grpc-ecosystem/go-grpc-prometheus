@@ -187,7 +187,7 @@ func (s *ServerInterceptorTestSuite) TestStreamingIncrementsHistograms() {
 
 	before = sumCountersForMetricAndLabels(s.T(), "grpc_server_handling_seconds_count", "PingList", "server_stream")
 	_, err := s.testClient.PingList(s.ctx, &pb_testproto.PingRequest{ErrorCodeReturned: uint32(codes.FailedPrecondition)}) // should return with code=FailedPrecondition
-	require.NoError(s.T(), err, "PingList must not fail immedietely")
+	require.NoError(s.T(), err, "PingList must not fail immediately")
 
 	after = sumCountersForMetricAndLabels(s.T(), "grpc_server_handling_seconds_count", "PingList", "server_stream")
 	assert.EqualValues(s.T(), before+1, after, "grpc_server_handling_seconds_count should be incremented for PingList FailedPrecondition")
@@ -212,7 +212,7 @@ func (s *ServerInterceptorTestSuite) TestStreamingIncrementsHandled() {
 
 	before = sumCountersForMetricAndLabels(s.T(), "grpc_server_handled_total", "PingList", "server_stream", "FailedPrecondition")
 	_, err := s.testClient.PingList(s.ctx, &pb_testproto.PingRequest{ErrorCodeReturned: uint32(codes.FailedPrecondition)}) // should return with code=FailedPrecondition
-	require.NoError(s.T(), err, "PingList must not fail immedietely")
+	require.NoError(s.T(), err, "PingList must not fail immediately")
 
 	after = sumCountersForMetricAndLabels(s.T(), "grpc_server_handled_total", "PingList", "server_stream", "FailedPrecondition")
 	assert.EqualValues(s.T(), before+1, after, "grpc_server_handled_total should be incremented for PingList FailedPrecondition")

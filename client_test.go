@@ -158,7 +158,7 @@ func (s *ClientInterceptorTestSuite) TestStreamingIncrementsHistograms() {
 
 	before = sumCountersForMetricAndLabels(s.T(), "grpc_client_handling_seconds_count", "PingList", "server_stream")
 	ss, err := s.testClient.PingList(s.ctx, &pb_testproto.PingRequest{ErrorCodeReturned: uint32(codes.FailedPrecondition)}) // should return with code=FailedPrecondition
-	require.NoError(s.T(), err, "PingList must not fail immedietely")
+	require.NoError(s.T(), err, "PingList must not fail immediately")
 	// Do a read, just to progate errors.
 	_, err = ss.Recv()
 	require.Equal(s.T(), codes.FailedPrecondition, grpc.Code(err), "Recv must return FailedPrecondition, otherwise the test is wrong")
@@ -186,7 +186,7 @@ func (s *ClientInterceptorTestSuite) TestStreamingIncrementsHandled() {
 
 	before = sumCountersForMetricAndLabels(s.T(), "grpc_client_handled_total", "PingList", "server_stream", "FailedPrecondition")
 	ss, err := s.testClient.PingList(s.ctx, &pb_testproto.PingRequest{ErrorCodeReturned: uint32(codes.FailedPrecondition)}) // should return with code=FailedPrecondition
-	require.NoError(s.T(), err, "PingList must not fail immedietely")
+	require.NoError(s.T(), err, "PingList must not fail immediately")
 	// Do a read, just to progate errors.
 	_, err = ss.Recv()
 	require.Equal(s.T(), codes.FailedPrecondition, grpc.Code(err), "Recv must return FailedPrecondition, otherwise the test is wrong")
