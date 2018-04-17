@@ -207,7 +207,7 @@ func (s *ClientInterceptorTestSuite) TestStreamingIncrementsMessageCounts() {
 			break
 		}
 		require.NoError(s.T(), err, "reading pingList shouldn't fail")
-		count += 1
+		count++
 	}
 	require.EqualValues(s.T(), countListResponses, count, "Number of received msg on the wire must match")
 	afterSent := sumCountersForMetricAndLabels(s.T(), "grpc_client_msg_sent_total", "PingList", "server_stream")
