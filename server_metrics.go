@@ -4,6 +4,7 @@ import (
 	prom "github.com/prometheus/client_golang/prometheus"
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/status"
 )
 
 // ServerMetrics represents a collection of metrics to be registered on a
@@ -104,7 +105,8 @@ func (m *ServerMetrics) UnaryServerInterceptor() func(ctx context.Context, req i
 		monitor := newServerReporter(m, Unary, info.FullMethod)
 		monitor.ReceivedMessage()
 		resp, err := handler(ctx, req)
-		monitor.Handled(grpc.Code(err))
+		st, _ := status.FromError(err)
+		monitor.Handled(st.Code())
 		if err == nil {
 			monitor.SentMessage()
 		}
@@ -117,7 +119,8 @@ func (m *ServerMetrics) StreamServerInterceptor() func(srv interface{}, ss grpc.
 	return func(srv interface{}, ss grpc.ServerStream, info *grpc.StreamServerInfo, handler grpc.StreamHandler) error {
 		monitor := newServerReporter(m, streamRpcType(info), info.FullMethod)
 		err := handler(srv, &monitoredServerStream{ss, monitor})
-		monitor.Handled(grpc.Code(err))
+		st, _ := status.FromError(err)
+		monitor.Handled(st.Code())
 		return err
 	}
 }
