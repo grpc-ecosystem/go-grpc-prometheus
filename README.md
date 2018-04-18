@@ -118,7 +118,7 @@ each of the 20 messages sent back, a counter will be incremented:
 grpc_server_msg_sent_total{grpc_method="PingList",grpc_service="mwitkow.testproto.TestService",grpc_type="server_stream"} 20
 ```
 
-After the call completes, it's status (`OK` or other [gRPC status code](https://github.com/grpc/grpc-go/blob/master/codes/codes.go)) 
+After the call completes, its status (`OK` or other [gRPC status code](https://github.com/grpc/grpc-go/blob/master/codes/codes.go)) 
 and the relevant call labels increment the `grpc_server_handled_total` counter.
 
 ```jsoniq
