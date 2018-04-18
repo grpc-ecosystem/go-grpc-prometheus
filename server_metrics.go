@@ -137,26 +137,6 @@ func (m *ServerMetrics) InitializeMetrics(server *grpc.Server) {
 	}
 }
 
-// Register registers all server metrics in a given metrics registry. Depending
-// on histogram options and whether they are enabled, histogram metrics are
-// also registered.
-//
-// Deprecated: ServerMetrics implements Prometheus Collector interface. You can
-// register an instance of ServerMetrics directly by using
-// prometheus.Register(m).
-func (m *ServerMetrics) Register(r prom.Registerer) error {
-	return r.Register(m)
-}
-
-// MustRegister tries to register all server metrics and panics on an error.
-//
-// Deprecated: ServerMetrics implements Prometheus Collector interface. You can
-// register an instance of ServerMetrics directly by using
-// prometheus.MustRegister(m).
-func (m *ServerMetrics) MustRegister(r prom.Registerer) {
-	r.MustRegister(m)
-}
-
 func streamRpcType(info *grpc.StreamServerInfo) grpcType {
 	if info.IsClientStream && !info.IsServerStream {
 		return ClientStream
