@@ -19,6 +19,7 @@ import (
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
+	"google.golang.org/grpc/status"
 )
 
 var (
@@ -161,7 +162,8 @@ func (s *ClientInterceptorTestSuite) TestStreamingIncrementsHistograms() {
 	require.NoError(s.T(), err, "PingList must not fail immediately")
 	// Do a read, just to progate errors.
 	_, err = ss.Recv()
-	require.Equal(s.T(), codes.FailedPrecondition, grpc.Code(err), "Recv must return FailedPrecondition, otherwise the test is wrong")
+	st, _ := status.FromError(err)
+	require.Equal(s.T(), codes.FailedPrecondition, st.Code(), "Recv must return FailedPrecondition, otherwise the test is wrong")
 
 	after = sumCountersForMetricAndLabels(s.T(), "grpc_client_handling_seconds_count", "PingList", "server_stream")
 	assert.EqualValues(s.T(), before+1, after, "grpc_client_handling_seconds_count should be incremented for PingList FailedPrecondition")
@@ -189,7 +191,8 @@ func (s *ClientInterceptorTestSuite) TestStreamingIncrementsHandled() {
 	require.NoError(s.T(), err, "PingList must not fail immediately")
 	// Do a read, just to progate errors.
 	_, err = ss.Recv()
-	require.Equal(s.T(), codes.FailedPrecondition, grpc.Code(err), "Recv must return FailedPrecondition, otherwise the test is wrong")
+	st, _ := status.FromError(err)
+	require.Equal(s.T(), codes.FailedPrecondition, st.Code(), "Recv must return FailedPrecondition, otherwise the test is wrong")
 
 	after = sumCountersForMetricAndLabels(s.T(), "grpc_client_handled_total", "PingList", "server_stream", "FailedPrecondition")
 	assert.EqualValues(s.T(), before+1, after, "grpc_client_handled_total should be incremented for PingList FailedPrecondition")
