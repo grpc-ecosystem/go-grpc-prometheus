@@ -94,7 +94,7 @@ func (s *ServerInterceptorTestSuite) TearDownSuite() {
 }
 
 func (s *ServerInterceptorTestSuite) TestRegisterPresetsStuff() {
-	for testId, testCase := range []struct {
+	for testID, testCase := range []struct {
 		metricName     string
 		existingLabels []string
 	}{
@@ -110,7 +110,7 @@ func (s *ServerInterceptorTestSuite) TestRegisterPresetsStuff() {
 		{"grpc_server_handled_total", []string{"mwitkow.testproto.TestService", "PingEmpty", "unary", "ResourceExhausted"}},
 	} {
 		lineCount := len(fetchPrometheusLines(s.T(), testCase.metricName, testCase.existingLabels...))
-		assert.NotEqual(s.T(), 0, lineCount, "metrics must exist for test case %d", testId)
+		assert.NotEqual(s.T(), 0, lineCount, "metrics must exist for test case %d", testID)
 	}
 }
 
