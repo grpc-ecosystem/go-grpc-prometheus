@@ -28,3 +28,8 @@ scrape_configs:
     scrape_interval: 2s
     static_configs:
       - targets: ['localhost:9092']
+        
+  - job_name: 'grpcclient'
+    scrape_interval: 2s
+    static_configs:
+      - targets: ['localhost:9094']
