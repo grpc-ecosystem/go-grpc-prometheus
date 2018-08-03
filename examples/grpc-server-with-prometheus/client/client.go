@@ -12,32 +12,28 @@ import (
 	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 
+	"github.com/grpc-ecosystem/go-grpc-prometheus"
 	pb "github.com/grpc-ecosystem/go-grpc-prometheus/examples/grpc-server-with-prometheus/protobuf"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 var (
-	// Create a metrics registry.
-	reg = prometheus.NewRegistry()
-
-	// Create a customized counter metric.
-	customizedCounterMetric = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Name: "demo_client_say_hello_method_call_count",
-		Help: "Total number of RPCs called on the client.",
-	}, []string{"name"})
+	// Create some standard client metrics
+	grpcMetrics = grpc_prometheus.NewClientMetrics()
 )
 
-func init() {
-	// Register customized metrics to registry.
-	reg.MustRegister(customizedCounterMetric)
-	customizedCounterMetric.WithLabelValues("Test")
-}
-
 func main() {
+	// Create a metrics registry.
+	reg := prometheus.NewRegistry()
+	// Register client metrics to registry.
+	reg.MustRegister(grpcMetrics)
+
 	// Create a insecure gRPC channel to communicate with the server.
 	conn, err := grpc.Dial(
 		fmt.Sprintf("localhost:%v", 9093),
+		grpc.WithUnaryInterceptor(grpcMetrics.UnaryClientInterceptor()),
+		grpc.WithStreamInterceptor(grpcMetrics.StreamClientInterceptor()),
 		grpc.WithInsecure(),
 	)
 	if err != nil {
@@ -66,8 +62,6 @@ func main() {
 			if err != nil {
 				log.Fatal(err)
 			}
-			// Increase the count of calling of SayHello
-			customizedCounterMetric.WithLabelValues("Test").Inc()
 			// Sleep 3 seconds.
 			time.Sleep(3 * time.Second)
 		}
