@@ -18,17 +18,13 @@ import (
 	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
-var (
-	// Create some standard client metrics
-	grpcMetrics = grpc_prometheus.NewClientMetrics()
-)
-
 func main() {
 	// Create a metrics registry.
 	reg := prometheus.NewRegistry()
+	// Create some standard client metrics.
+	grpcMetrics := grpc_prometheus.NewClientMetrics()
 	// Register client metrics to registry.
 	reg.MustRegister(grpcMetrics)
-
 	// Create a insecure gRPC channel to communicate with the server.
 	conn, err := grpc.Dial(
 		fmt.Sprintf("localhost:%v", 9093),
@@ -62,7 +58,6 @@ func main() {
 			if err != nil {
 				log.Fatal(err)
 			}
-			// Sleep 3 seconds.
 			time.Sleep(3 * time.Second)
 		}
 	}()
