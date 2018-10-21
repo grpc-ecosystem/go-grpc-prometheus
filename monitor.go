@@ -72,7 +72,7 @@ type clientMonitor struct {
 
 var _ prometheus.Collector = &clientMonitor{}
 
-func initClientMonitor(opts prometheus.Opts) *clientMonitor {
+func initClientMonitor(opts prometheus.Opts, buckets []float64) *clientMonitor {
 	dialer := prometheus.NewCounterVec(
 		counterOpts(opts, "reconnects_total", "A total number of reconnects made by the client."),
 		[]string{"address"},
@@ -112,7 +112,7 @@ func initClientMonitor(opts prometheus.Opts) *clientMonitor {
 
 	// Histograms
 	requestDuration := prometheus.NewHistogramVec(
-		histogramOpts(opts, "request_duration_histogram_seconds", "The RPC request latencies in seconds on the client side.", nil),
+		histogramOpts(opts, "request_duration_histogram_seconds", "The RPC request latencies in seconds on the client side.", buckets),
 		[]string{labelService, labelMethod, labelCode, labelType},
 	)
 

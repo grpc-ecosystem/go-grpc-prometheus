@@ -58,8 +58,8 @@ func NewServerMetrics(counterOpts ...CollectorOption) *ServerMetrics {
 
 //// EnableHandlingTimeHistogram enables histograms being registered when
 //// registering the ServerMetrics on a Prometheus registry. Histograms can be
-//// expensive on Prometheus servers. It takes options to configure histogram
-//// options such as the defined buckets.
+//// expensive on Prometheus servers. It takes collectorOptions to configure histogram
+//// collectorOptions such as the defined buckets.
 //func (m *ServerMetrics) EnableHandlingTimeHistogram(opts ...HistogramCollectorOption) {
 //	for _, o := range opts {
 //		o(&m.serverHandledHistogramOpts)

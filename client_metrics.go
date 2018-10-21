@@ -20,14 +20,28 @@ type ClientMetrics struct {
 // ClientMetrics when not using the default Prometheus monitor registry, for
 // example when wanting to control which monitor are added to a registry as
 // opposed to automatically adding monitor via init functions.
-func NewClientMetrics(counterOpts ...CollectorOption) *ClientMetrics {
-	opts := counterOptions(counterOpts).apply(prom.Opts{
-		Namespace: namespace,
-		Subsystem: "client",
-	})
+func NewClientMetrics(opts ...CollectorOption) *ClientMetrics {
+	var collectorOptions collectorOptions
+	for _, fn := range opts {
+		fn(&collectorOptions)
+	}
+
+	if collectorOptions.namespace == "" {
+		collectorOptions.namespace = namespace
+	}
+	if collectorOptions.subsystem == "" {
+		collectorOptions.subsystem = "client"
+	}
 
 	return &ClientMetrics{
-		clientMonitor: initClientMonitor(opts),
+		clientMonitor: initClientMonitor(
+			prom.Opts{
+				Namespace:   collectorOptions.namespace,
+				Subsystem:   collectorOptions.subsystem,
+				ConstLabels: collectorOptions.constLabels,
+			},
+			collectorOptions.buckets,
+		),
 	}
 }
 

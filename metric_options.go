@@ -4,19 +4,20 @@ import (
 	prom "github.com/prometheus/client_golang/prometheus"
 )
 
-type options struct {
+// CollectorOption lets you add options to monitor using With* funcs.
+type CollectorOption func(*collectorOptions)
+
+type collectorOptions struct {
 	namespace, subsystem string
 	constLabels          prom.Labels
 	buckets              []float64
 }
 
-// A CollectorOption lets you add options to monitor using With* funcs.
-type CollectorOption func(*options)
-
 type counterOptions []CollectorOption
 
+// TODO: remove once ServerMetrics is changed.
 func (co counterOptions) apply(base prom.Opts) prom.Opts {
-	var opts options
+	var opts collectorOptions
 	for _, f := range co {
 		f(&opts)
 	}
@@ -34,28 +35,28 @@ func (co counterOptions) apply(base prom.Opts) prom.Opts {
 
 // WithConstLabels allows you to add ConstLabels to Counter monitor.
 func WithConstLabels(labels prom.Labels) CollectorOption {
-	return func(o *options) {
+	return func(o *collectorOptions) {
 		o.constLabels = labels
 	}
 }
 
-// WithSubsystem allows to change default subsystem.
+// WithNamespace allows to change default subsystem.
 func WithNamespace(namespace string) CollectorOption {
-	return func(o *options) {
+	return func(o *collectorOptions) {
 		o.namespace = namespace
 	}
 }
 
 // WithSubsystem allows to change default subsystem.
 func WithSubsystem(subsystem string) CollectorOption {
-	return func(o *options) {
+	return func(o *collectorOptions) {
 		o.subsystem = subsystem
 	}
 }
 
 // WithBuckets allows you to specify custom bucket ranges for histograms.
 func WithBuckets(buckets []float64) CollectorOption {
-	return func(o *options) {
+	return func(o *collectorOptions) {
 		o.buckets = buckets
 	}
 }
