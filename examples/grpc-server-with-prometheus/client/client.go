@@ -9,13 +9,12 @@ import (
 	"strings"
 	"time"
 
-	"golang.org/x/net/context"
-	"google.golang.org/grpc"
-
 	"github.com/grpc-ecosystem/go-grpc-prometheus"
 	pb "github.com/grpc-ecosystem/go-grpc-prometheus/examples/grpc-server-with-prometheus/protobuf"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"golang.org/x/net/context"
+	"google.golang.org/grpc"
 )
 
 func main() {
@@ -28,8 +27,8 @@ func main() {
 	// Create a insecure gRPC channel to communicate with the server.
 	conn, err := grpc.Dial(
 		fmt.Sprintf("localhost:%v", 9093),
-		grpc.WithUnaryInterceptor(grpcMetrics.UnaryClientInterceptor()),
-		grpc.WithStreamInterceptor(grpcMetrics.StreamClientInterceptor()),
+		grpc.WithUnaryInterceptor(grpcMetrics.UnaryInterceptor()),
+		grpc.WithStreamInterceptor(grpcMetrics.StreamInterceptor()),
 		grpc.WithInsecure(),
 	)
 	if err != nil {

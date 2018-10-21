@@ -5,35 +5,31 @@
 
 package grpc_prometheus
 
-import (
-	prom "github.com/prometheus/client_golang/prometheus"
-)
-
 var (
-	// DefaultClientMetrics is the default instance of ClientMetrics. It is
-	// intended to be used in conjunction the default Prometheus metrics
-	// registry.
-	DefaultClientMetrics = NewClientMetrics()
-
-	// UnaryClientInterceptor is a gRPC client-side interceptor that provides Prometheus monitoring for Unary RPCs.
-	UnaryClientInterceptor = DefaultClientMetrics.UnaryClientInterceptor()
-
-	// StreamClientInterceptor is a gRPC client-side interceptor that provides Prometheus monitoring for Streaming RPCs.
-	StreamClientInterceptor = DefaultClientMetrics.StreamClientInterceptor()
+//// DefaultClientMetrics is the default instance of ClientMetrics. It is
+//// intended to be used in conjunction the default Prometheus monitor
+//// registry.
+//DefaultClientMetrics = NewClientMetrics()
+//
+//// UnaryInterceptor is a gRPC client-side interceptor that provides Prometheus monitoring for Unary RPCs.
+//UnaryClientInterceptor = DefaultClientMetrics.UnaryInterceptor()
+//
+//// StreamInterceptor is a gRPC client-side interceptor that provides Prometheus monitoring for Streaming RPCs.
+//StreamClientInterceptor = DefaultClientMetrics.StreamInterceptor()
 )
 
 func init() {
-	prom.MustRegister(DefaultClientMetrics.clientStartedCounter)
-	prom.MustRegister(DefaultClientMetrics.clientHandledCounter)
-	prom.MustRegister(DefaultClientMetrics.clientStreamMsgReceived)
-	prom.MustRegister(DefaultClientMetrics.clientStreamMsgSent)
+	//prom.MustRegister(DefaultClientMetrics)
+	//prom.MustRegister(DefaultClientMetrics.clientHandledCounter)
+	//prom.MustRegister(DefaultClientMetrics.clientStreamMsgReceived)
+	//prom.MustRegister(DefaultClientMetrics.clientStreamMsgSent)
 }
 
 // EnableClientHandlingTimeHistogram turns on recording of handling time of
-// RPCs. Histogram metrics can be very expensive for Prometheus to retain and
+// RPCs. Histogram monitor can be very expensive for Prometheus to retain and
 // query. This function acts on the DefaultClientMetrics variable and the
-// default Prometheus metrics registry.
-func EnableClientHandlingTimeHistogram(opts ...HistogramOption) {
-	DefaultClientMetrics.EnableClientHandlingTimeHistogram(opts...)
-	prom.Register(DefaultClientMetrics.clientHandledHistogram)
-}
+// default Prometheus monitor registry.
+//func EnableClientHandlingTimeHistogram(opts ...HistogramCollectorOption) {
+//DefaultClientMetrics.EnableClientHandlingTimeHistogram(opts...)
+//prom.Register(DefaultClientMetrics.clientHandledHistogram)
+//}

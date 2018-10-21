@@ -12,7 +12,7 @@ import (
 
 var (
 	// DefaultServerMetrics is the default instance of ServerMetrics. It is
-	// intended to be used in conjunction the default Prometheus metrics
+	// intended to be used in conjunction the default Prometheus monitor
 	// registry.
 	DefaultServerMetrics = NewServerMetrics()
 
@@ -31,18 +31,18 @@ func init() {
 }
 
 // Register takes a gRPC server and pre-initializes all counters to 0. This
-// allows for easier monitoring in Prometheus (no missing metrics), and should
+// allows for easier monitoring in Prometheus (no missing monitor), and should
 // be called *after* all services have been registered with the server. This
 // function acts on the DefaultServerMetrics variable.
 func Register(server *grpc.Server) {
 	DefaultServerMetrics.InitializeMetrics(server)
 }
 
-// EnableHandlingTimeHistogram turns on recording of handling time
-// of RPCs. Histogram metrics can be very expensive for Prometheus
-// to retain and query. This function acts on the DefaultServerMetrics
-// variable and the default Prometheus metrics registry.
-func EnableHandlingTimeHistogram(opts ...HistogramOption) {
-	DefaultServerMetrics.EnableHandlingTimeHistogram(opts...)
-	prom.Register(DefaultServerMetrics.serverHandledHistogram)
-}
+//// EnableHandlingTimeHistogram turns on recording of handling time
+//// of RPCs. Histogram monitor can be very expensive for Prometheus
+//// to retain and query. This function acts on the DefaultServerMetrics
+//// variable and the default Prometheus monitor registry.
+//func EnableHandlingTimeHistogram(opts ...HistogramCollectorOption) {
+//	DefaultServerMetrics.EnableHandlingTimeHistogram(opts...)
+//	prom.Register(DefaultServerMetrics.serverHandledHistogram)
+//}
