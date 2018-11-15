@@ -15,7 +15,7 @@ import (
 	"golang.org/x/net/context"
 )
 
-func ExampleDraft() {
+func ExampleStatsHandler() {
 	// Listen an actual port.
 	lis, err := net.Listen("tcp", "127.0.0.1:0")
 	assert(err)
@@ -81,20 +81,5 @@ func newDemoServer() *demoServiceServer {
 
 // SayHello implements a interface defined by protobuf.
 func (s *demoServiceServer) SayHello(ctx context.Context, request *pb.HelloRequest) (*pb.HelloResponse, error) {
-	customizedCounterMetric.WithLabelValues(request.Name).Inc()
 	return &pb.HelloResponse{Message: fmt.Sprintf("Hello %s", request.Name)}, nil
 }
-
-var (
-	// Create a metrics registry.
-	reg = prometheus.NewRegistry()
-
-	// Create some standard server metrics.
-	grpcMetrics = grpc_prometheus.NewServerMetrics()
-
-	// Create a customized counter metric.
-	customizedCounterMetric = prometheus.NewCounterVec(prometheus.CounterOpts{
-		Name: "demo_server_say_hello_method_handle_count",
-		Help: "Total number of RPCs handled on the server.",
-	}, []string{"name"})
-)

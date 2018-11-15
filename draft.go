@@ -12,20 +12,20 @@ import (
 )
 
 const (
-	namespace      = "grpc"
-	labelService   = "grpc_service"
-	labelMethod    = "grpc_method"
-	labelType      = "grpc_type"
-	labelCode      = "grpc_code"
-	labelUserAgent = "grpc_user_agent"
-	labelFailFast  = "grpc_fail_fast"
+	namespace    = "grpc"
+	labelService = "grpc_service"
+	labelMethod  = "grpc_method"
+	//labelType      = "grpc_type"
+	//labelCode      = "grpc_code"
+	//labelUserAgent = "grpc_user_agent"
+	labelFailFast = "grpc_fail_fast"
 )
 
 type ctxKey int
 
 var (
-	tagRPCKey  ctxKey = 1
-	tagConnKey ctxKey = 2
+	tagRPCKey ctxKey = 1
+	//tagConnKey ctxKey = 2
 )
 
 type Subsystem int
