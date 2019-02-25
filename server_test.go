@@ -5,6 +5,7 @@ package grpc_prometheus
 
 import (
 	"bufio"
+	"context"
 	"fmt"
 	"io"
 	"net"
@@ -24,7 +25,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -52,6 +52,7 @@ type ServerInterceptorTestSuite struct {
 	clientConn     *grpc.ClientConn
 	testClient     pb_testproto.TestServiceClient
 	ctx            context.Context
+	cancel         context.CancelFunc
 }
 
 func (s *ServerInterceptorTestSuite) SetupSuite() {
@@ -80,7 +81,7 @@ func (s *ServerInterceptorTestSuite) SetupSuite() {
 
 func (s *ServerInterceptorTestSuite) SetupTest() {
 	// Make all RPC calls last at most 2 sec, meaning all async issues or deadlock will not kill tests.
-	s.ctx, _ = context.WithTimeout(context.TODO(), 2*time.Second)
+	s.ctx, s.cancel = context.WithTimeout(context.TODO(), 2*time.Second)
 
 	// Make sure every test starts with same fresh, intialized metric state.
 	DefaultServerMetrics.serverStartedCounter.Reset()
@@ -101,6 +102,10 @@ func (s *ServerInterceptorTestSuite) TearDownSuite() {
 	if s.clientConn != nil {
 		s.clientConn.Close()
 	}
+}
+
+func (s *ServerInterceptorTestSuite) TearDownTest() {
+	s.cancel()
 }
 
 func (s *ServerInterceptorTestSuite) TestRegisterPresetsStuff() {
