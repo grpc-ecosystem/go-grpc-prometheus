@@ -140,7 +140,7 @@ func (m *ClientMetrics) EnableClientHandlingTimeHistogram(opts ...HistogramOptio
 // Histogram metrics can be very expensive for Prometheus to retain and query.
 func (m *ClientMetrics) EnableClientStreamReceiveTimeHistogram(opts ...HistogramOption) {
 	for _, o := range opts {
-		o(&m.clientHandledHistogramOpts)
+		o(&m.clientStreamRecvHistogramOpts)
 	}
 
 	if !m.clientStreamRecvHistogramEnabled {
@@ -157,7 +157,7 @@ func (m *ClientMetrics) EnableClientStreamReceiveTimeHistogram(opts ...Histogram
 // Histogram metrics can be very expensive for Prometheus to retain and query.
 func (m *ClientMetrics) EnableClientStreamSendTimeHistogram(opts ...HistogramOption) {
 	for _, o := range opts {
-		o(&m.clientHandledHistogramOpts)
+		o(&m.clientStreamSendHistogramOpts)
 	}
 
 	if !m.clientStreamSendHistogramEnabled {
