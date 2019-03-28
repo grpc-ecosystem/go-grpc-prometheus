@@ -10,6 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Added
 
+* Require go 1.9 or later and test against these versions in CI.
 * Provide metrics object as `prometheus.Collector`, for conventional metric registration.
 * Support non-default/global Prometheus registry.
 * Allow configuring counters with `prometheus.CounterOpts`.
