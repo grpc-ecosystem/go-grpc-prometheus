@@ -13,16 +13,19 @@ import (
 // ClientMetrics represents a collection of metrics to be registered on a
 // Prometheus metrics registry for a gRPC client.
 type ClientMetrics struct {
-	clientStartedCounter             *prom.CounterVec
-	clientHandledCounter             *prom.CounterVec
-	clientStreamMsgReceived          *prom.CounterVec
-	clientStreamMsgSent              *prom.CounterVec
-	clientHandledHistogramEnabled    bool
-	clientHandledHistogramOpts       prom.HistogramOpts
-	clientHandledHistogram           *prom.HistogramVec
+	clientStartedCounter    *prom.CounterVec
+	clientHandledCounter    *prom.CounterVec
+	clientStreamMsgReceived *prom.CounterVec
+	clientStreamMsgSent     *prom.CounterVec
+
+	clientHandledHistogramEnabled bool
+	clientHandledHistogramOpts    prom.HistogramOpts
+	clientHandledHistogram        *prom.HistogramVec
+
 	clientStreamRecvHistogramEnabled bool
 	clientStreamRecvHistogramOpts    prom.HistogramOpts
 	clientStreamRecvHistogram        *prom.HistogramVec
+
 	clientStreamSendHistogramEnabled bool
 	clientStreamSendHistogramOpts    prom.HistogramOpts
 	clientStreamSendHistogram        *prom.HistogramVec

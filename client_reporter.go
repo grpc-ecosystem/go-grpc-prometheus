@@ -68,7 +68,6 @@ func (r *clientReporter) SendMessageTimer() timer {
 }
 
 func (r *clientReporter) SentMessage() {
-
 	r.metrics.clientStreamMsgSent.WithLabelValues(string(r.rpcType), r.serviceName, r.methodName).Inc()
 }
 
