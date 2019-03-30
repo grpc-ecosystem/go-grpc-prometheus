@@ -20,6 +20,8 @@ common patterns: auth, logging and... monitoring.
 
 To use Interceptors in chains, please see [`go-grpc-middleware`](https://github.com/mwitkow/go-grpc-middleware).
 
+This library requires Go 1.9 or later.
+
 ## Usage
 
 There are two types of interceptors: client-side and server-side. This package provides monitoring Interceptors for both.
