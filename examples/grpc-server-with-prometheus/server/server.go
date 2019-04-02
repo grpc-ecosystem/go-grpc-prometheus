@@ -1,12 +1,12 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"log"
 	"net"
 	"net/http"
 
-	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 
 	"github.com/grpc-ecosystem/go-grpc-prometheus"

@@ -4,18 +4,16 @@
 package grpc_prometheus
 
 import (
+	"context"
+	"io"
 	"net"
 	"testing"
-
 	"time"
-
-	"io"
 
 	pb_testproto "github.com/grpc-ecosystem/go-grpc-prometheus/examples/testproto"
 	"github.com/prometheus/client_golang/prometheus"
 	"github.com/stretchr/testify/require"
 	"github.com/stretchr/testify/suite"
-	"golang.org/x/net/context"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
@@ -38,6 +36,7 @@ type ClientInterceptorTestSuite struct {
 	clientConn     *grpc.ClientConn
 	testClient     pb_testproto.TestServiceClient
 	ctx            context.Context
+	cancel         context.CancelFunc
 }
 
 func (s *ClientInterceptorTestSuite) SetupSuite() {
@@ -69,7 +68,7 @@ func (s *ClientInterceptorTestSuite) SetupSuite() {
 
 func (s *ClientInterceptorTestSuite) SetupTest() {
 	// Make all RPC calls last at most 2 sec, meaning all async issues or deadlock will not kill tests.
-	s.ctx, _ = context.WithTimeout(context.TODO(), 2*time.Second)
+	s.ctx, s.cancel = context.WithTimeout(context.TODO(), 2*time.Second)
 
 	// Make sure every test starts with same fresh, intialized metric state.
 	DefaultClientMetrics.clientStartedCounter.Reset()
@@ -89,6 +88,10 @@ func (s *ClientInterceptorTestSuite) TearDownSuite() {
 	if s.clientConn != nil {
 		s.clientConn.Close()
 	}
+}
+
+func (s *ClientInterceptorTestSuite) TearDownTest() {
+	s.cancel()
 }
 
 func (s *ClientInterceptorTestSuite) TestUnaryIncrementsMetrics() {
