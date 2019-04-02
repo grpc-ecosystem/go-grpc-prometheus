@@ -1,6 +1,4 @@
-SHELL="/bin/bash"
-
-GOFILES_NOVENDOR = $(shell go list ./... | grep -v /vendor/)
+GOFILES_NOVENDOR = $(go list ./... | grep -v /vendor/)
 
 all: vet fmt test
 
