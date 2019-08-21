@@ -16,18 +16,20 @@ type clientReporter struct {
 	serviceName string
 	methodName  string
 	startTime   time.Time
+	target      string
 }
 
-func newClientReporter(m *ClientMetrics, rpcType grpcType, fullMethod string) *clientReporter {
+func newClientReporter(m *ClientMetrics, rpcType grpcType, fullMethod string, target string) *clientReporter {
 	r := &clientReporter{
 		metrics: m,
 		rpcType: rpcType,
+		target:  target,
 	}
 	if r.metrics.clientHandledHistogramEnabled {
 		r.startTime = time.Now()
 	}
 	r.serviceName, r.methodName = splitMethodName(fullMethod)
-	r.metrics.clientStartedCounter.WithLabelValues(string(r.rpcType), r.serviceName, r.methodName).Inc()
+	r.metrics.clientStartedCounter.WithLabelValues(string(r.rpcType), r.serviceName, r.methodName, target).Inc()
 	return r
 }
 
@@ -47,7 +49,7 @@ var emptyTimer = noOpTimer{}
 
 func (r *clientReporter) ReceiveMessageTimer() timer {
 	if r.metrics.clientStreamRecvHistogramEnabled {
-		hist := r.metrics.clientStreamRecvHistogram.WithLabelValues(string(r.rpcType), r.serviceName, r.methodName)
+		hist := r.metrics.clientStreamRecvHistogram.WithLabelValues(string(r.rpcType), r.serviceName, r.methodName, r.target)
 		return prometheus.NewTimer(hist)
 	}
 
@@ -55,12 +57,12 @@ func (r *clientReporter) ReceiveMessageTimer() timer {
 }
 
 func (r *clientReporter) ReceivedMessage() {
-	r.metrics.clientStreamMsgReceived.WithLabelValues(string(r.rpcType), r.serviceName, r.methodName).Inc()
+	r.metrics.clientStreamMsgReceived.WithLabelValues(string(r.rpcType), r.serviceName, r.methodName, r.target).Inc()
 }
 
 func (r *clientReporter) SendMessageTimer() timer {
 	if r.metrics.clientStreamSendHistogramEnabled {
-		hist := r.metrics.clientStreamSendHistogram.WithLabelValues(string(r.rpcType), r.serviceName, r.methodName)
+		hist := r.metrics.clientStreamSendHistogram.WithLabelValues(string(r.rpcType), r.serviceName, r.methodName, r.target)
 		return prometheus.NewTimer(hist)
 	}
 
@@ -68,12 +70,12 @@ func (r *clientReporter) SendMessageTimer() timer {
 }
 
 func (r *clientReporter) SentMessage() {
-	r.metrics.clientStreamMsgSent.WithLabelValues(string(r.rpcType), r.serviceName, r.methodName).Inc()
+	r.metrics.clientStreamMsgSent.WithLabelValues(string(r.rpcType), r.serviceName, r.methodName, r.target).Inc()
 }
 
 func (r *clientReporter) Handled(code codes.Code) {
-	r.metrics.clientHandledCounter.WithLabelValues(string(r.rpcType), r.serviceName, r.methodName, code.String()).Inc()
+	r.metrics.clientHandledCounter.WithLabelValues(string(r.rpcType), r.serviceName, r.methodName, code.String(), r.target).Inc()
 	if r.metrics.clientHandledHistogramEnabled {
-		r.metrics.clientHandledHistogram.WithLabelValues(string(r.rpcType), r.serviceName, r.methodName).Observe(time.Since(r.startTime).Seconds())
+		r.metrics.clientHandledHistogram.WithLabelValues(string(r.rpcType), r.serviceName, r.methodName, r.target).Observe(time.Since(r.startTime).Seconds())
 	}
 }

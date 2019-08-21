@@ -42,25 +42,25 @@ func NewClientMetrics(counterOpts ...CounterOption) *ClientMetrics {
 			opts.apply(prom.CounterOpts{
 				Name: "grpc_client_started_total",
 				Help: "Total number of RPCs started on the client.",
-			}), []string{"grpc_type", "grpc_service", "grpc_method"}),
+			}), []string{"grpc_type", "grpc_service", "grpc_method", "target"}),
 
 		clientHandledCounter: prom.NewCounterVec(
 			opts.apply(prom.CounterOpts{
 				Name: "grpc_client_handled_total",
 				Help: "Total number of RPCs completed by the client, regardless of success or failure.",
-			}), []string{"grpc_type", "grpc_service", "grpc_method", "grpc_code"}),
+			}), []string{"grpc_type", "grpc_service", "grpc_method", "grpc_code", "target"}),
 
 		clientStreamMsgReceived: prom.NewCounterVec(
 			opts.apply(prom.CounterOpts{
 				Name: "grpc_client_msg_received_total",
 				Help: "Total number of RPC stream messages received by the client.",
-			}), []string{"grpc_type", "grpc_service", "grpc_method"}),
+			}), []string{"grpc_type", "grpc_service", "grpc_method", "target"}),
 
 		clientStreamMsgSent: prom.NewCounterVec(
 			opts.apply(prom.CounterOpts{
 				Name: "grpc_client_msg_sent_total",
 				Help: "Total number of gRPC stream messages sent by the client.",
-			}), []string{"grpc_type", "grpc_service", "grpc_method"}),
+			}), []string{"grpc_type", "grpc_service", "grpc_method", "target"}),
 
 		clientHandledHistogramEnabled: false,
 		clientHandledHistogramOpts: prom.HistogramOpts{
@@ -133,7 +133,7 @@ func (m *ClientMetrics) EnableClientHandlingTimeHistogram(opts ...HistogramOptio
 	if !m.clientHandledHistogramEnabled {
 		m.clientHandledHistogram = prom.NewHistogramVec(
 			m.clientHandledHistogramOpts,
-			[]string{"grpc_type", "grpc_service", "grpc_method"},
+			[]string{"grpc_type", "grpc_service", "grpc_method", "target"},
 		)
 	}
 	m.clientHandledHistogramEnabled = true
@@ -149,7 +149,7 @@ func (m *ClientMetrics) EnableClientStreamReceiveTimeHistogram(opts ...Histogram
 	if !m.clientStreamRecvHistogramEnabled {
 		m.clientStreamRecvHistogram = prom.NewHistogramVec(
 			m.clientStreamRecvHistogramOpts,
-			[]string{"grpc_type", "grpc_service", "grpc_method"},
+			[]string{"grpc_type", "grpc_service", "grpc_method", "target"},
 		)
 	}
 
@@ -166,7 +166,7 @@ func (m *ClientMetrics) EnableClientStreamSendTimeHistogram(opts ...HistogramOpt
 	if !m.clientStreamSendHistogramEnabled {
 		m.clientStreamSendHistogram = prom.NewHistogramVec(
 			m.clientStreamSendHistogramOpts,
-			[]string{"grpc_type", "grpc_service", "grpc_method"},
+			[]string{"grpc_type", "grpc_service", "grpc_method", "target"},
 		)
 	}
 
@@ -176,7 +176,7 @@ func (m *ClientMetrics) EnableClientStreamSendTimeHistogram(opts ...HistogramOpt
 // UnaryClientInterceptor is a gRPC client-side interceptor that provides Prometheus monitoring for Unary RPCs.
 func (m *ClientMetrics) UnaryClientInterceptor() func(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
 	return func(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
-		monitor := newClientReporter(m, Unary, method)
+		monitor := newClientReporter(m, Unary, method, cc.Target())
 		monitor.SentMessage()
 		err := invoker(ctx, method, req, reply, cc, opts...)
 		if err != nil {
@@ -191,7 +191,7 @@ func (m *ClientMetrics) UnaryClientInterceptor() func(ctx context.Context, metho
 // StreamClientInterceptor is a gRPC client-side interceptor that provides Prometheus monitoring for Streaming RPCs.
 func (m *ClientMetrics) StreamClientInterceptor() func(ctx context.Context, desc *grpc.StreamDesc, cc *grpc.ClientConn, method string, streamer grpc.Streamer, opts ...grpc.CallOption) (grpc.ClientStream, error) {
 	return func(ctx context.Context, desc *grpc.StreamDesc, cc *grpc.ClientConn, method string, streamer grpc.Streamer, opts ...grpc.CallOption) (grpc.ClientStream, error) {
-		monitor := newClientReporter(m, clientStreamType(desc), method)
+		monitor := newClientReporter(m, clientStreamType(desc), method, cc.Target())
 		clientStream, err := streamer(ctx, desc, cc, method, opts...)
 		if err != nil {
 			st, _ := status.FromError(err)
