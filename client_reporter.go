@@ -33,14 +33,13 @@ func newClientReporter(m *ClientMetrics, rpcType grpcType, fullMethod string) *c
 
 // timer is a helper interface to time functions.
 type timer interface {
-	ObserveDuration() time.Duration
+	ObserveDuration()
 }
 
 type noOpTimer struct {
 }
 
-func (noOpTimer) ObserveDuration() time.Duration {
-	return 0
+func (noOpTimer) ObserveDuration() {
 }
 
 var emptyTimer = noOpTimer{}
