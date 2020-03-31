@@ -179,7 +179,7 @@ func (m *ClientMetrics) UnaryClientInterceptor() func(ctx context.Context, metho
 		monitor := newClientReporter(m, Unary, method)
 		monitor.SentMessage()
 		err := invoker(ctx, method, req, reply, cc, opts...)
-		if err != nil {
+		if err == nil {
 			monitor.ReceivedMessage()
 		}
 		st, _ := status.FromError(err)
