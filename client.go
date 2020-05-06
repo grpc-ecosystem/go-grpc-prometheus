@@ -47,7 +47,7 @@ func EnableClientStreamReceiveTimeHistogram(opts ...HistogramOption) {
 	prom.Register(DefaultClientMetrics.clientStreamRecvHistogram)
 }
 
-// EnableClientStreamReceiveTimeHistogram turns on recording of
+// EnableClientStreamSendTimeHistogram turns on recording of
 // single message send time of streaming RPCs.
 // This function acts on the DefaultClientMetrics variable and the
 // default Prometheus metrics registry.
