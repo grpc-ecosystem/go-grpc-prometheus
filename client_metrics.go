@@ -3,6 +3,7 @@ package grpc_prometheus
 import (
 	"context"
 	"io"
+	"sync"
 
 	prom "github.com/prometheus/client_golang/prometheus"
 	"google.golang.org/grpc"
@@ -18,17 +19,20 @@ type ClientMetrics struct {
 	clientStreamMsgReceived *prom.CounterVec
 	clientStreamMsgSent     *prom.CounterVec
 
-	clientHandledHistogramEnabled bool
-	clientHandledHistogramOpts    prom.HistogramOpts
-	clientHandledHistogram        *prom.HistogramVec
+	doOnceClientHandledHistogramEnable sync.Once
+	clientHandledHistogramEnabled      bool
+	clientHandledHistogramOpts         prom.HistogramOpts
+	clientHandledHistogram             *prom.HistogramVec
 
-	clientStreamRecvHistogramEnabled bool
-	clientStreamRecvHistogramOpts    prom.HistogramOpts
-	clientStreamRecvHistogram        *prom.HistogramVec
+	doOnceClientStreamRecvHistogramEnable sync.Once
+	clientStreamRecvHistogramEnabled      bool
+	clientStreamRecvHistogramOpts         prom.HistogramOpts
+	clientStreamRecvHistogram             *prom.HistogramVec
 
-	clientStreamSendHistogramEnabled bool
-	clientStreamSendHistogramOpts    prom.HistogramOpts
-	clientStreamSendHistogram        *prom.HistogramVec
+	doOnceClientStreamSendHistogramEnable sync.Once
+	clientStreamSendHistogramEnabled      bool
+	clientStreamSendHistogramOpts         prom.HistogramOpts
+	clientStreamSendHistogram             *prom.HistogramVec
 }
 
 // NewClientMetrics returns a ClientMetrics object. Use a new instance of
@@ -127,50 +131,54 @@ func (m *ClientMetrics) Collect(ch chan<- prom.Metric) {
 // EnableClientHandlingTimeHistogram turns on recording of handling time of RPCs.
 // Histogram metrics can be very expensive for Prometheus to retain and query.
 func (m *ClientMetrics) EnableClientHandlingTimeHistogram(opts ...HistogramOption) {
-	for _, o := range opts {
-		o(&m.clientHandledHistogramOpts)
-	}
-	if !m.clientHandledHistogramEnabled {
-		m.clientHandledHistogram = prom.NewHistogramVec(
-			m.clientHandledHistogramOpts,
-			[]string{"grpc_type", "grpc_service", "grpc_method"},
-		)
-	}
-	m.clientHandledHistogramEnabled = true
+	m.doOnceClientHandledHistogramEnable.Do(func() {
+		for _, o := range opts {
+			o(&m.clientHandledHistogramOpts)
+		}
+		if !m.clientHandledHistogramEnabled {
+			m.clientHandledHistogram = prom.NewHistogramVec(
+				m.clientHandledHistogramOpts,
+				[]string{"grpc_type", "grpc_service", "grpc_method"},
+			)
+			m.clientHandledHistogramEnabled = true
+		}
+	})
 }
 
 // EnableClientStreamReceiveTimeHistogram turns on recording of single message receive time of streaming RPCs.
 // Histogram metrics can be very expensive for Prometheus to retain and query.
 func (m *ClientMetrics) EnableClientStreamReceiveTimeHistogram(opts ...HistogramOption) {
-	for _, o := range opts {
-		o(&m.clientStreamRecvHistogramOpts)
-	}
+	m.doOnceClientStreamRecvHistogramEnable.Do(func() {
+		for _, o := range opts {
+			o(&m.clientStreamRecvHistogramOpts)
+		}
 
-	if !m.clientStreamRecvHistogramEnabled {
-		m.clientStreamRecvHistogram = prom.NewHistogramVec(
-			m.clientStreamRecvHistogramOpts,
-			[]string{"grpc_type", "grpc_service", "grpc_method"},
-		)
-	}
-
-	m.clientStreamRecvHistogramEnabled = true
+		if !m.clientStreamRecvHistogramEnabled {
+			m.clientStreamRecvHistogram = prom.NewHistogramVec(
+				m.clientStreamRecvHistogramOpts,
+				[]string{"grpc_type", "grpc_service", "grpc_method"},
+			)
+			m.clientStreamRecvHistogramEnabled = true
+		}
+	})
 }
 
 // EnableClientStreamSendTimeHistogram turns on recording of single message send time of streaming RPCs.
 // Histogram metrics can be very expensive for Prometheus to retain and query.
 func (m *ClientMetrics) EnableClientStreamSendTimeHistogram(opts ...HistogramOption) {
-	for _, o := range opts {
-		o(&m.clientStreamSendHistogramOpts)
-	}
+	m.doOnceClientStreamSendHistogramEnable.Do(func() {
+		for _, o := range opts {
+			o(&m.clientStreamSendHistogramOpts)
+		}
 
-	if !m.clientStreamSendHistogramEnabled {
-		m.clientStreamSendHistogram = prom.NewHistogramVec(
-			m.clientStreamSendHistogramOpts,
-			[]string{"grpc_type", "grpc_service", "grpc_method"},
-		)
-	}
-
-	m.clientStreamSendHistogramEnabled = true
+		if !m.clientStreamSendHistogramEnabled {
+			m.clientStreamSendHistogram = prom.NewHistogramVec(
+				m.clientStreamSendHistogramOpts,
+				[]string{"grpc_type", "grpc_service", "grpc_method"},
+			)
+			m.clientStreamSendHistogramEnabled = true
+		}
+	})
 }
 
 // UnaryClientInterceptor is a gRPC client-side interceptor that provides Prometheus monitoring for Unary RPCs.
