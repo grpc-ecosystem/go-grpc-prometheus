@@ -46,3 +46,21 @@ func EnableHandlingTimeHistogram(opts ...HistogramOption) {
 	DefaultServerMetrics.EnableHandlingTimeHistogram(opts...)
 	prom.Register(DefaultServerMetrics.serverHandledHistogram)
 }
+
+// EnableServerStreamReceiveTimeHistogram turns on recording of
+// single message receive time of streaming RPCs.
+// This function acts on the DefaultServerMetrics variable and the
+// default Prometheus metrics registry.
+func EnableServerStreamReceiveTimeHistogram(opts ...HistogramOption) {
+	DefaultServerMetrics.EnableServerStreamReceiveTimeHistogram(opts...)
+	prom.Register(DefaultServerMetrics.serverStreamRecvHistogram)
+}
+
+// EnableServerStreamSendTimeHistogram turns on recording of
+// single message send time of streaming RPCs.
+// This function acts on the DefaultServerMetrics variable and the
+// default Prometheus metrics registry.
+func EnableServerStreamSendTimeHistogram(opts ...HistogramOption) {
+	DefaultServerMetrics.EnableServerStreamSendTimeHistogram(opts...)
+	prom.Register(DefaultServerMetrics.serverStreamSendHistogram)
+}
