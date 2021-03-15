@@ -8,6 +8,12 @@
 [![Slack](https://img.shields.io/badge/join%20slack-%23go--grpc--prometheus-brightgreen.svg)](https://join.slack.com/t/improbable-eng/shared_invite/enQtMzQ1ODcyMzQ5MjM4LWY5ZWZmNGM2ODc5MmViNmQ3ZTA3ZTY3NzQwOTBlMTkzZmIxZTIxODk0OWU3YjZhNWVlNDU3MDlkZGViZjhkMjc)
 [![Apache 2.0 License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 
+> :warning: We consolidating projects and moving to single repo where we have more control and awareness. We are moving this codebase for longterm to https://github.com/grpc-ecosystem/go-grpc-middleware/tree/v2. Existing state of Prometheus middleware was moved to https://github.com/grpc-ecosystem/go-grpc-middleware/tree/v2/providers/openmetrics
+If you want to change something effectively long term, I would suggest proposing PR against https://github.com/grpc-ecosystem/go-grpc-middleware/tree/v2/providers/openmetrics instead (notice `v2 `branch, not master!).
+
+
+
+
 [Prometheus](https://prometheus.io/) monitoring for your [gRPC Go](https://github.com/grpc/grpc-go) servers and clients.
 
 A sister implementation for [gRPC Java](https://github.com/grpc/grpc-java) (same metrics, same semantics) is in [grpc-ecosystem/java-grpc-prometheus](https://github.com/grpc-ecosystem/java-grpc-prometheus).
