@@ -2,22 +2,32 @@ package grpc_prometheus
 
 import (
 	"context"
+
 	"github.com/grpc-ecosystem/go-grpc-prometheus/packages/grpcstatus"
 	prom "github.com/prometheus/client_golang/prometheus"
 
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/stats" // new
 )
 
 // ServerMetrics represents a collection of metrics to be registered on a
 // Prometheus metrics registry for a gRPC server.
 type ServerMetrics struct {
-	serverStartedCounter          *prom.CounterVec
-	serverHandledCounter          *prom.CounterVec
-	serverStreamMsgReceived       *prom.CounterVec
-	serverStreamMsgSent           *prom.CounterVec
-	serverHandledHistogramEnabled bool
-	serverHandledHistogramOpts    prom.HistogramOpts
-	serverHandledHistogram        *prom.HistogramVec
+	// ------------------- new ----------------- {
+	serverStartedCounter                  *prom.CounterVec
+	serverHandledCounter                  *prom.CounterVec
+	serverStreamMsgReceived               *prom.CounterVec
+	serverStreamMsgSent                   *prom.CounterVec
+	serverHandledHistogramEnabled         bool
+	serverHandledHistogramOpts            prom.HistogramOpts
+	serverHandledHistogram                *prom.HistogramVec
+	serverMsgSizeReceivedHistogramEnabled bool
+	serverMsgSizeReceivedHistogramOpts    prom.HistogramOpts
+	serverMsgSizeReceivedHistogram        *prom.HistogramVec
+	serverMsgSizeSentHistogramEnabled     bool
+	serverMsgSizeSentHistogramOpts        prom.HistogramOpts
+	serverMsgSizeSentHistogram            *prom.HistogramVec
+	// ------------------ new ----------------- }
 }
 
 // NewServerMetrics returns a ServerMetrics object. Use a new instance of
@@ -53,9 +63,64 @@ func NewServerMetrics(counterOpts ...CounterOption) *ServerMetrics {
 			Help:    "Histogram of response latency (seconds) of gRPC that had been application-level handled by the server.",
 			Buckets: prom.DefBuckets,
 		},
-		serverHandledHistogram: nil,
+
+		// ----------------- new ---------------{
+
+		serverHandledHistogram:                nil,
+		serverMsgSizeReceivedHistogramEnabled: false,
+		serverMsgSizeReceivedHistogramOpts: prom.HistogramOpts{
+			Name:    "grpc_server_msg_size_received_bytes",
+			Help:    "Histogram of message sizes received by the server.",
+			Buckets: defMsgBytesBuckets,
+		},
+		serverMsgSizeReceivedHistogram:    nil,
+		serverMsgSizeSentHistogramEnabled: false,
+		serverMsgSizeSentHistogramOpts: prom.HistogramOpts{
+			Name:    "grpc_server_msg_size_sent_bytes",
+			Help:    "Histogram of message sizes sent by the server.",
+			Buckets: defMsgBytesBuckets,
+		},
+		serverMsgSizeSentHistogram: nil,
+
+		// ---------------- new ----------------}
 	}
 }
+
+// ---------------------------- new -----------------------{
+
+// EnableMsgSizeReceivedBytesHistogram turns on recording of received message size of RPCs.
+// Histogram metrics can be very expensive for Prometheus to retain and query. It takes
+// options to configure histogram options such as the defined buckets.
+func (m *ServerMetrics) EnableMsgSizeReceivedBytesHistogram(opts ...HistogramOption) {
+	for _, o := range opts {
+		o(&m.serverMsgSizeReceivedHistogramOpts)
+	}
+	if !m.serverMsgSizeReceivedHistogramEnabled {
+		m.serverMsgSizeReceivedHistogram = prom.NewHistogramVec(
+			m.serverMsgSizeReceivedHistogramOpts,
+			[]string{"grpc_service", "grpc_method", "grpc_stats"},
+		)
+	}
+	m.serverMsgSizeReceivedHistogramEnabled = true
+}
+
+// EnableMsgSizeSentBytesHistogram turns on recording of sent message size of RPCs.
+// Histogram metrics can be very expensive for Prometheus to retain and query. It takes
+// options to configure histogram options such as the defined buckets.
+func (m *ServerMetrics) EnableMsgSizeSentBytesHistogram(opts ...HistogramOption) {
+	for _, o := range opts {
+		o(&m.serverMsgSizeSentHistogramOpts)
+	}
+	if !m.serverMsgSizeSentHistogramEnabled {
+		m.serverMsgSizeSentHistogram = prom.NewHistogramVec(
+			m.serverMsgSizeSentHistogramOpts,
+			[]string{"grpc_service", "grpc_method", "grpc_stats"},
+		)
+	}
+	m.serverMsgSizeSentHistogramEnabled = true
+}
+
+// ------------------------- new ------------------------}
 
 // EnableHandlingTimeHistogram enables histograms being registered when
 // registering the ServerMetrics on a Prometheus registry. Histograms can be
@@ -85,6 +150,15 @@ func (m *ServerMetrics) Describe(ch chan<- *prom.Desc) {
 	if m.serverHandledHistogramEnabled {
 		m.serverHandledHistogram.Describe(ch)
 	}
+
+	// ---- new ---- {
+	if m.serverMsgSizeReceivedHistogramEnabled {
+		m.serverMsgSizeReceivedHistogram.Describe(ch)
+	}
+	if m.serverMsgSizeSentHistogramEnabled {
+		m.serverMsgSizeSentHistogram.Describe(ch)
+	}
+	// ---- new ---- }
 }
 
 // Collect is called by the Prometheus registry when collecting
@@ -98,6 +172,15 @@ func (m *ServerMetrics) Collect(ch chan<- prom.Metric) {
 	if m.serverHandledHistogramEnabled {
 		m.serverHandledHistogram.Collect(ch)
 	}
+
+	// ---- new ---- {
+	if m.serverMsgSizeReceivedHistogramEnabled {
+		m.serverMsgSizeReceivedHistogram.Collect(ch)
+	}
+	if m.serverMsgSizeSentHistogramEnabled {
+		m.serverMsgSizeSentHistogram.Collect(ch)
+	}
+	// ---- new ---- }
 }
 
 // UnaryServerInterceptor is a gRPC server-side interceptor that provides Prometheus monitoring for Unary RPCs.
@@ -125,6 +208,17 @@ func (m *ServerMetrics) StreamServerInterceptor() func(srv interface{}, ss grpc.
 		return err
 	}
 }
+
+// ---- new ---- {
+
+// NewServerStatsHandler is a gRPC server-side stats.Handler that providers Prometheus monitoring for RPCs.
+func (m *ServerMetrics) NewServerStatsHandler() stats.Handler {
+	return &serverStatsHandler{
+		serverMetrics: m,
+	}
+}
+
+// ---- new ---- }
 
 // InitializeMetrics initializes all metrics, with their appropriate null
 // value, for all gRPC methods registered on a gRPC server. This is useful, to
@@ -180,6 +274,20 @@ func preRegisterMethod(metrics *ServerMetrics, serviceName string, mInfo *grpc.M
 	if metrics.serverHandledHistogramEnabled {
 		metrics.serverHandledHistogram.GetMetricWithLabelValues(methodType, serviceName, methodName)
 	}
+
+	// ---- new ---- {
+	if metrics.serverMsgSizeReceivedHistogramEnabled {
+		for _, stats := range allStatss {
+			metrics.serverMsgSizeReceivedHistogram.GetMetricWithLabelValues(serviceName, methodName, stats.String())
+		}
+	}
+	if metrics.serverMsgSizeSentHistogramEnabled {
+		for _, stats := range allStatss {
+			metrics.serverMsgSizeSentHistogram.GetMetricWithLabelValues(serviceName, methodName, stats.String())
+		}
+	}
+	// ---- new ---- }
+
 	for _, code := range allCodes {
 		metrics.serverHandledCounter.GetMetricWithLabelValues(methodType, serviceName, methodName, code.String())
 	}

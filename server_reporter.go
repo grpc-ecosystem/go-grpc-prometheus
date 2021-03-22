@@ -30,13 +30,59 @@ func newServerReporter(m *ServerMetrics, rpcType grpcType, fullMethod string) *s
 	return r
 }
 
+// ---- new ---- {
+
+func newServerReporterForStatsHanlder(startTime time.Time, m *ServerMetrics, fullMethod string) *serverReporter {
+	r := &serverReporter{
+		metrics:   m,
+		rpcType:   Unary,
+		startTime: startTime,
+	}
+	r.serviceName, r.methodName = splitMethodName(fullMethod)
+	return r
+}
+
+func (r *serverReporter) StartedConn() {
+	r.metrics.serverStartedCounter.WithLabelValues(string(r.rpcType), r.serviceName, r.methodName).Inc()
+}
+
+// ---- new ---- }
+
 func (r *serverReporter) ReceivedMessage() {
 	r.metrics.serverStreamMsgReceived.WithLabelValues(string(r.rpcType), r.serviceName, r.methodName).Inc()
 }
 
+// ---- new ---- {
+
+// ReceivedMessageSize counts the size of received messages on server-side
+func (r *serverReporter) ReceivedMessageSize(rpcStats grpcStats, size float64) {
+	if rpcStats == Payload {
+		r.ReceivedMessage()
+	}
+	if r.metrics.serverMsgSizeReceivedHistogramEnabled {
+		r.metrics.serverMsgSizeReceivedHistogram.WithLabelValues(r.serviceName, r.methodName, rpcStats.String()).Observe(size)
+	}
+}
+
+// ---- new ---- }
+
 func (r *serverReporter) SentMessage() {
 	r.metrics.serverStreamMsgSent.WithLabelValues(string(r.rpcType), r.serviceName, r.methodName).Inc()
 }
+
+// ---- new ---- {
+
+// SentMessageSize counts the size of sent messages on server-side
+func (r *serverReporter) SentMessageSize(rpcStats grpcStats, size float64) {
+	if rpcStats == Payload {
+		r.SentMessage()
+	}
+	if r.metrics.serverMsgSizeSentHistogramEnabled {
+		r.metrics.serverMsgSizeSentHistogram.WithLabelValues(r.serviceName, r.methodName, rpcStats.String()).Observe(size)
+	}
+}
+
+// ---- new ---- }
 
 func (r *serverReporter) Handled(code codes.Code) {
 	r.metrics.serverHandledCounter.WithLabelValues(string(r.rpcType), r.serviceName, r.methodName, code.String()).Inc()
