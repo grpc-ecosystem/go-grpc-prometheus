@@ -1,3 +1,6 @@
+// Copyright 2016 Michal Witkowski. All Rights Reserved.
+// See LICENSE for licensing terms.
+
 // Forked originally form https://github.com/grpc-ecosystem/go-grpc-prometheus/
 // the very same thing with https://github.com/grpc-ecosystem/go-grpc-prometheus/pull/88 integrated
 // for the additional functionality to monitore bytes received and send from clients or servers
