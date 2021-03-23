@@ -1,11 +1,16 @@
 // Copyright 2016 Michal Witkowski. All Rights Reserved.
 // See LICENSE for licensing terms.
 
+// Forked originally form https://github.com/grpc-ecosystem/go-grpc-prometheus/
+// the very same thing with https://github.com/grpc-ecosystem/go-grpc-prometheus/pull/88 integrated
+// for the additional functionality to monitore bytes received and send from clients or servers
+// eveything that is in between a "---- PR-88 ---- {"  and   "---- PR-88 ---- }" comment is the new addition from the PR88.
+
 package grpc_prometheus
 
 import (
 	"strings"
-	"time" // new
+	"time" // PR-88
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -28,7 +33,7 @@ var (
 		codes.Unavailable, codes.DataLoss,
 	}
 
-	// ---- new ---- {
+	// ---- PR-88 ---- {
 
 	allStatss = []grpcStats{Header, Payload, Tailer}
 
@@ -36,7 +41,7 @@ var (
 
 	defMsgBytesBuckets = []float64{0, 32, 64, 128, 256, 512, 1024, 2048, 8192, 32768, 131072, 524288}
 
-	// ---- new ---- }
+	// ---- PR-88 ---- }
 )
 
 func splitMethodName(fullMethodName string) (string, string) {
@@ -60,7 +65,7 @@ func typeFromMethodInfo(mInfo *grpc.MethodInfo) grpcType {
 	return BidiStream
 }
 
-// ---- new ---- {
+// ---- PR-88 ---- {
 
 type grpcStats string
 
@@ -89,4 +94,4 @@ func newRPCInfo(fullMethodName string) *rpcInfo {
 	return &rpcInfo{fullMethodName: fullMethodName}
 }
 
-// ---- new ---- }
+// ---- PR-88 ---- }

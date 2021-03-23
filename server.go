@@ -3,6 +3,11 @@
 
 // gRPC Prometheus monitoring interceptors for server-side gRPC.
 
+// Forked originally form https://github.com/grpc-ecosystem/go-grpc-prometheus/
+// the very same thing with https://github.com/grpc-ecosystem/go-grpc-prometheus/pull/88 integrated
+// for the additional functionality to monitore bytes received and send from clients or servers
+// eveything that is in between a "---- PR-88 ---- {"  and   "---- PR-88 ---- }" comment is the new addition from the PR88.
+
 package grpc_prometheus
 
 import (
@@ -50,7 +55,7 @@ func EnableHandlingTimeHistogram(opts ...HistogramOption) {
 	prom.Register(DefaultServerMetrics.serverHandledHistogram)
 }
 
-// --------------------------- new -----------------------------{
+// ---- PR-88 ---- {
 
 // EnableServerMsgSizeReceivedBytesHistogram turns on recording of handling time
 // of RPCs. Histogram metrics can be very expensive for Prometheus
@@ -70,4 +75,4 @@ func EnableServerMsgSizeSentBytesHistogram(opts ...HistogramOption) {
 	prom.Register(DefaultServerMetrics.serverMsgSizeSentHistogram)
 }
 
-// -------------------------- new ------------------------------}
+// ---- PR-88 ---- }

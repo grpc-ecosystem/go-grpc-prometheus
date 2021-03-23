@@ -3,6 +3,11 @@
 
 // gRPC Prometheus monitoring interceptors for client-side gRPC.
 
+// Forked originally form https://github.com/grpc-ecosystem/go-grpc-prometheus/
+// the very same thing with https://github.com/grpc-ecosystem/go-grpc-prometheus/pull/88 integrated
+// for the additional functionality to monitore bytes received and send from clients or servers
+// eveything that is in between a " ---- PR-88 ---- {"  and   "---- PR-88 ---- }" comment is the new addition from the PR88.
+
 package grpc_prometheus
 
 import (
@@ -21,15 +26,12 @@ var (
 	// StreamClientInterceptor is a gRPC client-side interceptor that provides Prometheus monitoring for Streaming RPCs.
 	StreamClientInterceptor = DefaultClientMetrics.StreamClientInterceptor()
 
-
-// ---------------------------- JST CODE ---------------------------------{
-
+	// ---- PR-88 ---- {
 
 	// ClientStatsHandler is a gRPC client-side stats.Handler that provides Prometheus monitoring for RPCs.
 	ClientStatsHandler = DefaultClientMetrics.NewClientStatsHandler()
 
-
-// ---------------------------- JST CODE ---------------------------------}
+	// ---- PR-88 ---- }
 
 )
 
@@ -67,7 +69,7 @@ func EnableClientStreamSendTimeHistogram(opts ...HistogramOption) {
 	prom.Register(DefaultClientMetrics.clientStreamSendHistogram)
 }
 
-// ---------------------------- JST CODE ---------------------------------{
+// ---- PR-88 ---- {
 
 // EnableClientMsgSizeReceivedBytesHistogram turns on recording of
 // single message send time of streaming RPCs.
@@ -86,7 +88,6 @@ func EnableClientMsgSizeSentBytesHistogram(opts ...HistogramOption) {
 	DefaultClientMetrics.EnableMsgSizeSentBytesHistogram(opts...)
 	prom.Register(DefaultClientMetrics.clientMsgSizeSentHistogram)
 
-
-// ---------------------------- JST CODE ---------------------------------}
-
 }
+
+// ---- PR-88 ---- }

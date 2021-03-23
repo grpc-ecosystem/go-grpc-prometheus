@@ -1,3 +1,8 @@
+// Forked originally form https://github.com/grpc-ecosystem/go-grpc-prometheus/
+// the very same thing with https://github.com/grpc-ecosystem/go-grpc-prometheus/pull/88 integrated
+// for the additional functionality to monitore bytes received and send from clients or servers
+// eveything that is in between a "---- PR-88 ---- {"  and   "---- PR-88 ---- }" comment is the new addition from the PR88.
+
 package grpc_prometheus
 
 import (
@@ -7,13 +12,15 @@ import (
 	prom "github.com/prometheus/client_golang/prometheus"
 
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/stats" // new
+	"google.golang.org/grpc/stats" // PR-88
 )
 
 // ServerMetrics represents a collection of metrics to be registered on a
 // Prometheus metrics registry for a gRPC server.
 type ServerMetrics struct {
-	// ------------------- new ----------------- {
+
+	// ---- PR-88 ---- {
+
 	serverStartedCounter                  *prom.CounterVec
 	serverHandledCounter                  *prom.CounterVec
 	serverStreamMsgReceived               *prom.CounterVec
@@ -27,7 +34,8 @@ type ServerMetrics struct {
 	serverMsgSizeSentHistogramEnabled     bool
 	serverMsgSizeSentHistogramOpts        prom.HistogramOpts
 	serverMsgSizeSentHistogram            *prom.HistogramVec
-	// ------------------ new ----------------- }
+
+	// ---- PR-88 ---- }
 }
 
 // NewServerMetrics returns a ServerMetrics object. Use a new instance of
@@ -64,7 +72,7 @@ func NewServerMetrics(counterOpts ...CounterOption) *ServerMetrics {
 			Buckets: prom.DefBuckets,
 		},
 
-		// ----------------- new ---------------{
+		// ---- PR-88 ---- {
 
 		serverHandledHistogram:                nil,
 		serverMsgSizeReceivedHistogramEnabled: false,
@@ -82,11 +90,11 @@ func NewServerMetrics(counterOpts ...CounterOption) *ServerMetrics {
 		},
 		serverMsgSizeSentHistogram: nil,
 
-		// ---------------- new ----------------}
+		// ---- PR-88 ---- }
 	}
 }
 
-// ---------------------------- new -----------------------{
+// ---- PR-88 ---- {
 
 // EnableMsgSizeReceivedBytesHistogram turns on recording of received message size of RPCs.
 // Histogram metrics can be very expensive for Prometheus to retain and query. It takes
@@ -120,7 +128,7 @@ func (m *ServerMetrics) EnableMsgSizeSentBytesHistogram(opts ...HistogramOption)
 	m.serverMsgSizeSentHistogramEnabled = true
 }
 
-// ------------------------- new ------------------------}
+// ---- PR-88 ---- }
 
 // EnableHandlingTimeHistogram enables histograms being registered when
 // registering the ServerMetrics on a Prometheus registry. Histograms can be
@@ -151,14 +159,16 @@ func (m *ServerMetrics) Describe(ch chan<- *prom.Desc) {
 		m.serverHandledHistogram.Describe(ch)
 	}
 
-	// ---- new ---- {
+	// ---- PR-88 ---- {
+
 	if m.serverMsgSizeReceivedHistogramEnabled {
 		m.serverMsgSizeReceivedHistogram.Describe(ch)
 	}
 	if m.serverMsgSizeSentHistogramEnabled {
 		m.serverMsgSizeSentHistogram.Describe(ch)
 	}
-	// ---- new ---- }
+
+	// ---- PR-88 ---- }
 }
 
 // Collect is called by the Prometheus registry when collecting
@@ -173,14 +183,16 @@ func (m *ServerMetrics) Collect(ch chan<- prom.Metric) {
 		m.serverHandledHistogram.Collect(ch)
 	}
 
-	// ---- new ---- {
+	// ---- PR-88 ---- {
+
 	if m.serverMsgSizeReceivedHistogramEnabled {
 		m.serverMsgSizeReceivedHistogram.Collect(ch)
 	}
 	if m.serverMsgSizeSentHistogramEnabled {
 		m.serverMsgSizeSentHistogram.Collect(ch)
 	}
-	// ---- new ---- }
+
+	// ---- PR-88 ---- }
 }
 
 // UnaryServerInterceptor is a gRPC server-side interceptor that provides Prometheus monitoring for Unary RPCs.
@@ -209,7 +221,7 @@ func (m *ServerMetrics) StreamServerInterceptor() func(srv interface{}, ss grpc.
 	}
 }
 
-// ---- new ---- {
+// ---- PR-88 ---- {
 
 // NewServerStatsHandler is a gRPC server-side stats.Handler that providers Prometheus monitoring for RPCs.
 func (m *ServerMetrics) NewServerStatsHandler() stats.Handler {
@@ -218,7 +230,7 @@ func (m *ServerMetrics) NewServerStatsHandler() stats.Handler {
 	}
 }
 
-// ---- new ---- }
+// ---- PR-88 ---- }
 
 // InitializeMetrics initializes all metrics, with their appropriate null
 // value, for all gRPC methods registered on a gRPC server. This is useful, to
@@ -275,7 +287,8 @@ func preRegisterMethod(metrics *ServerMetrics, serviceName string, mInfo *grpc.M
 		metrics.serverHandledHistogram.GetMetricWithLabelValues(methodType, serviceName, methodName)
 	}
 
-	// ---- new ---- {
+	// ---- PR-88 ---- {
+
 	if metrics.serverMsgSizeReceivedHistogramEnabled {
 		for _, stats := range allStatss {
 			metrics.serverMsgSizeReceivedHistogram.GetMetricWithLabelValues(serviceName, methodName, stats.String())
@@ -286,7 +299,8 @@ func preRegisterMethod(metrics *ServerMetrics, serviceName string, mInfo *grpc.M
 			metrics.serverMsgSizeSentHistogram.GetMetricWithLabelValues(serviceName, methodName, stats.String())
 		}
 	}
-	// ---- new ---- }
+
+	// ---- PR-88 ---- }
 
 	for _, code := range allCodes {
 		metrics.serverHandledCounter.GetMetricWithLabelValues(methodType, serviceName, methodName, code.String())

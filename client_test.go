@@ -1,6 +1,11 @@
 // Copyright 2016 Michal Witkowski. All Rights Reserved.
 // See LICENSE for licensing terms.
 
+// Forked originally form https://github.com/grpc-ecosystem/go-grpc-prometheus/
+// the very same thing with https://github.com/grpc-ecosystem/go-grpc-prometheus/pull/88 integrated
+// for the additional functionality to monitore bytes received and send from clients or servers
+// eveything that is in between a " ---- PR-88 ---- {"  and   "---- PR-88 ---- }" comment is the new addition from the PR88.
+
 package grpc_prometheus
 
 import (
@@ -151,7 +156,7 @@ func (s *ClientInterceptorTestSuite) TestStreamingIncrementsMetrics() {
 	requireValueHistCount(s.T(), 2, DefaultClientMetrics.clientHandledHistogram.WithLabelValues("server_stream", "mwitkow.testproto.TestService", "PingList"))
 }
 
-// -------------------------- new --------------------------------{
+// ---- PR-88 ---- {
 
 func (s *ClientInterceptorTestSuite) SetupSuiteWithStatsHanlder() {
 	var err error
@@ -183,4 +188,4 @@ func (s *ClientInterceptorTestSuite) SetupSuiteWithStatsHanlder() {
 	s.testClient = pb_testproto.NewTestServiceClient(s.clientConn)
 }
 
-// ------------------------- new ---------------------------------}
+// ---- PR-88 ---- }

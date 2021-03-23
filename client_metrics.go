@@ -1,3 +1,11 @@
+// Copyright 2016 Michal Witkowski. All Rights Reserved.
+// See LICENSE for licensing terms.
+
+// Forked originally form https://github.com/grpc-ecosystem/go-grpc-prometheus/
+// the very same thing with https://github.com/grpc-ecosystem/go-grpc-prometheus/pull/88 integrated
+// for the additional functionality to monitore bytes received and send from clients or servers
+// eveything that is in between a " ---- PR-88 ---- {"  and   "---- PR-88 ---- }" comment is the new addition from the PR88.
+
 package grpc_prometheus
 
 import (
@@ -9,19 +17,22 @@ import (
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 
-	"google.golang.org/grpc/stats" // new
+	"google.golang.org/grpc/stats" // PR-88
 )
 
 // ClientMetrics represents a collection of metrics to be registered on a
 // Prometheus metrics registry for a gRPC client.
 type ClientMetrics struct {
-	// --------------- new -----------------{
+
+	// ---- PR-88 ---- {
+
 	clientStartedCounter     *prom.CounterVec
 	clientStartedCounterOpts prom.CounterOpts
 	clientHandledCounter     *prom.CounterVec
 	clientStreamMsgReceived  *prom.CounterVec
 	clientStreamMsgSent      *prom.CounterVec
-	// --------------- new ------------------}
+
+	// ---- PR-88 ---- }
 
 	clientHandledHistogramEnabled bool
 	clientHandledHistogramOpts    prom.HistogramOpts
@@ -35,8 +46,8 @@ type ClientMetrics struct {
 	clientStreamSendHistogramOpts    prom.HistogramOpts
 	clientStreamSendHistogram        *prom.HistogramVec
 
+	// ---- PR-88 ---- {
 
-	// ------------------------ new ------------------------{
 	clientMsgSizeReceivedHistogramEnabled bool
 	clientMsgSizeReceivedHistogramOpts    prom.HistogramOpts
 	clientMsgSizeReceivedHistogram        *prom.HistogramVec
@@ -44,7 +55,8 @@ type ClientMetrics struct {
 	clientMsgSizeSentHistogramEnabled bool
 	clientMsgSizeSentHistogramOpts    prom.HistogramOpts
 	clientMsgSizeSentHistogram        *prom.HistogramVec
-	// ----------------------- new -------------------------}
+
+	// ---- PR-88 ---- }
 }
 
 // NewClientMetrics returns a ClientMetrics object. Use a new instance of
@@ -98,10 +110,10 @@ func NewClientMetrics(counterOpts ...CounterOption) *ClientMetrics {
 			Help:    "Histogram of response latency (seconds) of the gRPC single message send.",
 			Buckets: prom.DefBuckets,
 		},
-		
-		// ------------------------- new --------------------------{
 
-		clientStreamSendHistogram: 		nil,
+		// ---- PR-88 ---- {
+
+		clientStreamSendHistogram:             nil,
 		clientMsgSizeReceivedHistogramEnabled: false,
 		clientMsgSizeReceivedHistogramOpts: prom.HistogramOpts{
 			Name:    "grpc_client_msg_size_received_bytes",
@@ -117,7 +129,7 @@ func NewClientMetrics(counterOpts ...CounterOption) *ClientMetrics {
 		},
 		clientMsgSizeSentHistogram: nil,
 
-		// ------------------------ new --------------------------}
+		// ---- PR-88 ---- }
 	}
 }
 
@@ -139,7 +151,7 @@ func (m *ClientMetrics) Describe(ch chan<- *prom.Desc) {
 		m.clientStreamSendHistogram.Describe(ch)
 	}
 
-	// --------------------- new -----------------------{
+	// ---- PR-88 ---- {
 
 	if m.clientMsgSizeReceivedHistogramEnabled {
 		m.clientMsgSizeReceivedHistogram.Describe(ch)
@@ -147,8 +159,8 @@ func (m *ClientMetrics) Describe(ch chan<- *prom.Desc) {
 	if m.clientMsgSizeSentHistogramEnabled {
 		m.clientMsgSizeSentHistogram.Describe(ch)
 	}
-	
-	// --------------------- new -----------------------}
+
+	// ---- PR-88 ---- }
 }
 
 // Collect is called by the Prometheus registry when collecting
@@ -169,7 +181,7 @@ func (m *ClientMetrics) Collect(ch chan<- prom.Metric) {
 		m.clientStreamSendHistogram.Collect(ch)
 	}
 
-	// ------------------- new ------------------{
+	// ---- PR-88 ---- {
 
 	if m.clientMsgSizeReceivedHistogramEnabled {
 		m.clientMsgSizeReceivedHistogram.Collect(ch)
@@ -178,7 +190,7 @@ func (m *ClientMetrics) Collect(ch chan<- prom.Metric) {
 		m.clientMsgSizeSentHistogram.Collect(ch)
 	}
 
-	// ------------------- new ------------------}
+	// ---- PR-88 ---- }
 }
 
 // EnableClientHandlingTimeHistogram turns on recording of handling time of RPCs.
@@ -230,7 +242,7 @@ func (m *ClientMetrics) EnableClientStreamSendTimeHistogram(opts ...HistogramOpt
 	m.clientStreamSendHistogramEnabled = true
 }
 
-// ------------------------------ new --------------------------------{
+// ---- PR-88 ---- {
 
 // EnableMsgSizeReceivedBytesHistogram turns on recording of received message size of RPCs.
 // Histogram metrics can be very expensive for Prometheus to retain and query. It takes
@@ -264,7 +276,7 @@ func (m *ClientMetrics) EnableMsgSizeSentBytesHistogram(opts ...HistogramOption)
 	m.clientMsgSizeSentHistogramEnabled = true
 }
 
-// -------------------------------- new ------------------------------}
+// ---- PR-88 ---- }
 
 // UnaryClientInterceptor is a gRPC client-side interceptor that provides Prometheus monitoring for Unary RPCs.
 func (m *ClientMetrics) UnaryClientInterceptor() func(ctx context.Context, method string, req, reply interface{}, cc *grpc.ClientConn, invoker grpc.UnaryInvoker, opts ...grpc.CallOption) error {
@@ -295,7 +307,7 @@ func (m *ClientMetrics) StreamClientInterceptor() func(ctx context.Context, desc
 	}
 }
 
-// ----------------------------- new -----------------------------{
+// ---- PR-88 ---- {
 
 // NewClientStatsHandler is a gRPC client-side stats.Handler that providers Prometheus monitoring for RPCs.
 func (m *ClientMetrics) NewClientStatsHandler() stats.Handler {
@@ -304,8 +316,7 @@ func (m *ClientMetrics) NewClientStatsHandler() stats.Handler {
 	}
 }
 
-// ---------------------------- new ------------------------------}
-
+// ---- PR-88 ---- }
 
 func clientStreamType(desc *grpc.StreamDesc) grpcType {
 	if desc.ClientStreams && !desc.ServerStreams {
