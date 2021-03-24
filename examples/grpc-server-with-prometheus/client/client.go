@@ -23,13 +23,14 @@ func main() {
 	reg := prometheus.NewRegistry()
 	// Create some standard client metrics.
 	grpcMetrics := grpc_prometheus.NewClientMetrics()
+	grpcMetrics.EnableMsgSizeSentBytesHistogram()
+	grpcMetrics.EnableMsgSizeReceivedBytesHistogram()
 	// Register client metrics to registry.
 	reg.MustRegister(grpcMetrics)
 	// Create a insecure gRPC channel to communicate with the server.
 	conn, err := grpc.Dial(
 		fmt.Sprintf("localhost:%v", 9093),
-		grpc.WithUnaryInterceptor(grpcMetrics.UnaryClientInterceptor()),
-		grpc.WithStreamInterceptor(grpcMetrics.StreamClientInterceptor()),
+		grpc.WithStatsHandler(grpcMetrics.NewClientStatsHandler()),
 		grpc.WithInsecure(),
 	)
 	if err != nil {
