@@ -43,7 +43,8 @@ func (h *clientStatsHandler) HandleRPC(ctx context.Context, s stats.RPCStats) {
 	case *stats.InPayload:
 		// TODO: remove the +5 offset on wire length here, which is a temporary stand-in for the missing grpc framing offset
 		//  See: https://github.com/grpc/grpc-go/issues/1647
-		monitor.ReceivedMessageSize(Payload, float64(s.WireLength+5))
+		// JST : changed s.WirteLength with len(s.Data), because otherwise it would laways have resulted in 0 + 5
+		monitor.ReceivedMessageSize(Payload, float64(len(s.Data)+5))
 	case *stats.InTrailer:
 		monitor.ReceivedMessageSize(Tailer, float64(s.WireLength))
 	case *stats.OutHeader:
