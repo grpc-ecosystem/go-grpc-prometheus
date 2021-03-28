@@ -24,7 +24,7 @@ func newDemoServer() *DemoServiceServer {
 
 // SayHello implements a interface defined by protobuf.
 func (s *DemoServiceServer) SayHello(ctx context.Context, request *pb.HelloRequest) (*pb.HelloResponse, error) {
-	return &pb.HelloResponse{Message: "Test"}, nil
+	return &pb.HelloResponse{Message: "ABCDEFGH"}, nil
 }
 
 var (

@@ -55,7 +55,7 @@ func main() {
 	go func() {
 		for {
 			// Call “SayHello” method and wait for response from gRPC Server.
-			_, err := client.SayHello(context.Background(), &pb.HelloRequest{Name: "Test"})
+			_, err := client.SayHello(context.Background(), &pb.HelloRequest{Name: "ABCDEFGH"})
 			if err != nil {
 				log.Printf("Calling the SayHello method unsuccessfully. ErrorInfo: %+v", err)
 				log.Printf("You should to stop the process")
