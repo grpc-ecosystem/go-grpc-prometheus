@@ -51,9 +51,6 @@ func main() {
 	}
 	defer lis.Close()
 
-	// Create a HTTP server for prometheus.
-	httpServer := &http.Server{Handler: promhttp.HandlerFor(reg, promhttp.HandlerOpts{}), Addr: fmt.Sprintf("0.0.0.0:%d", 9092)}
-
 	// Create a gRPC Server with gRPC interceptor.
 	grpcServer := grpc.NewServer(
 		grpc.StatsHandler(grpcMetrics.NewServerStatsHandler()),
@@ -70,7 +67,8 @@ func main() {
 
 	// Start your http server for prometheus.
 	go func() {
-		if err := httpServer.ListenAndServe(); err != nil {
+		http.Handle("/metrics", promhttp.HandlerFor(reg, promhttp.HandlerOpts{}))
+		if err := http.ListenAndServe(":9092", nil); err != nil {
 			log.Fatal("Unable to start a http server.")
 		}
 	}()
