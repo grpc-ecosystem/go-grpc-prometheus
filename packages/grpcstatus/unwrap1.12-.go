@@ -6,6 +6,6 @@ import (
 	"google.golang.org/grpc/status"
 )
 
-func unwrapNativeWrappedGRPCStatus(err error) (*status.Status, bool) {
+func unwrapGRPCStatus(err error) (*status.Status, bool) {
 	return nil, false
 }

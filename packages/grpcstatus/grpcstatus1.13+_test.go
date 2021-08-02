@@ -4,16 +4,17 @@ package grpcstatus
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"testing"
 )
 
 func TestNativeErrorUnwrapping(t *testing.T) {
 	gRPCCode := codes.FailedPrecondition
 	gRPCError := status.Errorf(gRPCCode, "Userspace error.")
-	expectedGRPCStatus, _ := status.FromError(gRPCError)
+	expectedGRPCStatus := status.Convert(gRPCError)
 	testedErrors := []error{
 		fmt.Errorf("go native wrapped error: %w", gRPCError),
 	}

@@ -1,10 +1,11 @@
 package grpcstatus
 
 import (
+	"testing"
+
 	"github.com/stretchr/testify/require"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
-	"testing"
 )
 
 // Own implementation of pkg/errors withStack to avoid additional dependency
@@ -15,12 +16,12 @@ type wrappedError struct {
 
 func (w *wrappedError) Error() string { return w.msg + ": " + w.cause.Error() }
 
-func (w *wrappedError) Cause() error { return w.cause }
+func (w *wrappedError) Unwrap() error { return w.cause }
 
 func TestErrorUnwrapping(t *testing.T) {
 	gRPCCode := codes.FailedPrecondition
 	gRPCError := status.Errorf(gRPCCode, "Userspace error.")
-	expectedGRPCStatus, _ := status.FromError(gRPCError)
+	expectedGRPCStatus := status.Convert(gRPCError)
 	testedErrors := []error{
 		gRPCError,
 		&wrappedError{cause: gRPCError, msg: "pkg/errors wrapped error: "},
