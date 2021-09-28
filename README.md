@@ -90,7 +90,7 @@ contain the same rich labels:
 Additionally for completed RPCs, the following labels are used:
 
   * `grpc_code` - the human-readable [gRPC status code](https://github.com/grpc/grpc-go/blob/master/codes/codes.go).
-    The list of all statuses is to long, but here are some common ones:
+    The list of all statuses is too long, but here are some common ones:
       
       - `OK` - means the RPC was successful
       - `IllegalArgument` - RPC contained bad values
