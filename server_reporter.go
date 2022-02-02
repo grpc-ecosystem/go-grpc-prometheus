@@ -22,7 +22,7 @@ func newServerReporter(m *ServerMetrics, rpcType grpcType, fullMethod string) *s
 		metrics: m,
 		rpcType: rpcType,
 	}
-	if r.metrics.serverHandledHistogramEnabled {
+	if r.metrics.getServerHandledHistogram() != nil {
 		r.startTime = time.Now()
 	}
 	r.serviceName, r.methodName = splitMethodName(fullMethod)
@@ -40,7 +40,7 @@ func (r *serverReporter) SentMessage() {
 
 func (r *serverReporter) Handled(code codes.Code) {
 	r.metrics.serverHandledCounter.WithLabelValues(string(r.rpcType), r.serviceName, r.methodName, code.String()).Inc()
-	if r.metrics.serverHandledHistogramEnabled {
-		r.metrics.serverHandledHistogram.WithLabelValues(string(r.rpcType), r.serviceName, r.methodName).Observe(time.Since(r.startTime).Seconds())
+	if h := r.metrics.getServerHandledHistogram(); h != nil {
+		h.WithLabelValues(string(r.rpcType), r.serviceName, r.methodName).Observe(time.Since(r.startTime).Seconds())
 	}
 }

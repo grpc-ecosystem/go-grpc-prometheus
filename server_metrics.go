@@ -2,6 +2,8 @@ package grpc_prometheus
 
 import (
 	"context"
+	"sync"
+
 	"github.com/grpc-ecosystem/go-grpc-prometheus/packages/grpcstatus"
 	prom "github.com/prometheus/client_golang/prometheus"
 
@@ -11,13 +13,13 @@ import (
 // ServerMetrics represents a collection of metrics to be registered on a
 // Prometheus metrics registry for a gRPC server.
 type ServerMetrics struct {
-	serverStartedCounter          *prom.CounterVec
-	serverHandledCounter          *prom.CounterVec
-	serverStreamMsgReceived       *prom.CounterVec
-	serverStreamMsgSent           *prom.CounterVec
-	serverHandledHistogramEnabled bool
-	serverHandledHistogramOpts    prom.HistogramOpts
-	serverHandledHistogram        *prom.HistogramVec
+	lock                       *sync.RWMutex
+	serverStartedCounter       *prom.CounterVec
+	serverHandledCounter       *prom.CounterVec
+	serverStreamMsgReceived    *prom.CounterVec
+	serverStreamMsgSent        *prom.CounterVec
+	serverHandledHistogramOpts prom.HistogramOpts
+	serverHandledHistogram     *prom.HistogramVec
 }
 
 // NewServerMetrics returns a ServerMetrics object. Use a new instance of
@@ -27,6 +29,7 @@ type ServerMetrics struct {
 func NewServerMetrics(counterOpts ...CounterOption) *ServerMetrics {
 	opts := counterOptions(counterOpts)
 	return &ServerMetrics{
+		lock: &sync.RWMutex{},
 		serverStartedCounter: prom.NewCounterVec(
 			opts.apply(prom.CounterOpts{
 				Name: "grpc_server_started_total",
@@ -47,7 +50,6 @@ func NewServerMetrics(counterOpts ...CounterOption) *ServerMetrics {
 				Name: "grpc_server_msg_sent_total",
 				Help: "Total number of gRPC stream messages sent by the server.",
 			}), []string{"grpc_type", "grpc_service", "grpc_method"}),
-		serverHandledHistogramEnabled: false,
 		serverHandledHistogramOpts: prom.HistogramOpts{
 			Name:    "grpc_server_handling_seconds",
 			Help:    "Histogram of response latency (seconds) of gRPC that had been application-level handled by the server.",
@@ -62,16 +64,24 @@ func NewServerMetrics(counterOpts ...CounterOption) *ServerMetrics {
 // expensive on Prometheus servers. It takes options to configure histogram
 // options such as the defined buckets.
 func (m *ServerMetrics) EnableHandlingTimeHistogram(opts ...HistogramOption) {
+	m.lock.Lock()
+	defer m.lock.Unlock()
+
 	for _, o := range opts {
 		o(&m.serverHandledHistogramOpts)
 	}
-	if !m.serverHandledHistogramEnabled {
+	if m.serverHandledHistogram == nil {
 		m.serverHandledHistogram = prom.NewHistogramVec(
 			m.serverHandledHistogramOpts,
 			[]string{"grpc_type", "grpc_service", "grpc_method"},
 		)
 	}
-	m.serverHandledHistogramEnabled = true
+}
+
+func (m *ServerMetrics) getServerHandledHistogram() *prom.HistogramVec {
+	m.lock.RLock()
+	defer m.lock.RUnlock()
+	return m.serverHandledHistogram
 }
 
 // Describe sends the super-set of all possible descriptors of metrics
@@ -82,8 +92,9 @@ func (m *ServerMetrics) Describe(ch chan<- *prom.Desc) {
 	m.serverHandledCounter.Describe(ch)
 	m.serverStreamMsgReceived.Describe(ch)
 	m.serverStreamMsgSent.Describe(ch)
-	if m.serverHandledHistogramEnabled {
-		m.serverHandledHistogram.Describe(ch)
+
+	if h := m.getServerHandledHistogram(); h != nil {
+		h.Describe(ch)
 	}
 }
 
@@ -95,8 +106,9 @@ func (m *ServerMetrics) Collect(ch chan<- prom.Metric) {
 	m.serverHandledCounter.Collect(ch)
 	m.serverStreamMsgReceived.Collect(ch)
 	m.serverStreamMsgSent.Collect(ch)
-	if m.serverHandledHistogramEnabled {
-		m.serverHandledHistogram.Collect(ch)
+
+	if h := m.getServerHandledHistogram(); h != nil {
+		h.Collect(ch)
 	}
 }
 
@@ -177,8 +189,9 @@ func preRegisterMethod(metrics *ServerMetrics, serviceName string, mInfo *grpc.M
 	metrics.serverStartedCounter.GetMetricWithLabelValues(methodType, serviceName, methodName)
 	metrics.serverStreamMsgReceived.GetMetricWithLabelValues(methodType, serviceName, methodName)
 	metrics.serverStreamMsgSent.GetMetricWithLabelValues(methodType, serviceName, methodName)
-	if metrics.serverHandledHistogramEnabled {
-		metrics.serverHandledHistogram.GetMetricWithLabelValues(methodType, serviceName, methodName)
+
+	if h := metrics.getServerHandledHistogram(); h != nil {
+		h.GetMetricWithLabelValues(methodType, serviceName, methodName)
 	}
 	for _, code := range allCodes {
 		metrics.serverHandledCounter.GetMetricWithLabelValues(methodType, serviceName, methodName, code.String())
