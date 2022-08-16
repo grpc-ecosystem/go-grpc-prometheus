@@ -43,7 +43,7 @@ import "github.com/grpc-ecosystem/go-grpc-prometheus"
         grpc.UnaryInterceptor(grpc_prometheus.UnaryServerInterceptor),
     )
     // Register your gRPC service implementations.
-    myservice.RegisterMyServiceServer(s.server, &myServiceImpl{})
+    myservice.RegisterMyServiceServer(myServer, &myServiceImpl{})
     // After all your registrations, make sure all of the Prometheus metrics are initialized.
     grpc_prometheus.Register(myServer)
     // Register Prometheus metrics handler.    
