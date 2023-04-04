@@ -1,6 +1,5 @@
-# Go gRPC Interceptors for Prometheus monitoring 
+# (Deprecated) Go gRPC Interceptors for Prometheus monitoring 
 
-[![Travis Build](https://travis-ci.org/grpc-ecosystem/go-grpc-prometheus.svg)](https://travis-ci.org/grpc-ecosystem/go-grpc-prometheus)
 [![Go Report Card](https://goreportcard.com/badge/github.com/grpc-ecosystem/go-grpc-prometheus)](http://goreportcard.com/report/grpc-ecosystem/go-grpc-prometheus)
 [![GoDoc](http://img.shields.io/badge/GoDoc-Reference-blue.svg)](https://godoc.org/github.com/grpc-ecosystem/go-grpc-prometheus)
 [![SourceGraph](https://sourcegraph.com/github.com/grpc-ecosystem/go-grpc-prometheus/-/badge.svg)](https://sourcegraph.com/github.com/grpc-ecosystem/go-grpc-prometheus/?badge)
@@ -8,11 +7,7 @@
 [![Slack](https://img.shields.io/badge/join%20slack-%23go--grpc--prometheus-brightgreen.svg)](https://join.slack.com/t/improbable-eng/shared_invite/enQtMzQ1ODcyMzQ5MjM4LWY5ZWZmNGM2ODc5MmViNmQ3ZTA3ZTY3NzQwOTBlMTkzZmIxZTIxODk0OWU3YjZhNWVlNDU3MDlkZGViZjhkMjc)
 [![Apache 2.0 License](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](LICENSE)
 
-> :warning: We consolidating projects and moving to single repo where we have more control and awareness. We are moving this codebase for longterm to https://github.com/grpc-ecosystem/go-grpc-middleware/tree/v2. Existing state of Prometheus middleware was moved to https://github.com/grpc-ecosystem/go-grpc-middleware/tree/v2/providers/openmetrics
-If you want to change something effectively long term, I would suggest proposing PR against https://github.com/grpc-ecosystem/go-grpc-middleware/tree/v2/providers/openmetrics instead (notice `v2 `branch, not master!).
-
-
-
+> :warning: This project is depreacted and archived as the functionality moved to [go-grpc-middleware](https://github.com/grpc-ecosystem/go-grpc-middleware) repo since [provider/prometheus@v1.0.0-rc.0](https://github.com/grpc-ecosystem/go-grpc-middleware/releases/tag/providers%2Fprometheus%2Fv1.0.0-rc.0) release. You can pull it using `go get github.com/grpc-ecosystem/go-grpc-middleware/providers/prometheus`. The API is simplified and morernized, yet functionality is similar to what v1.2.0 offered. All questions and issues you can submit [here](https://github.com/grpc-ecosystem/go-grpc-middleware/issues).
 
 [Prometheus](https://prometheus.io/) monitoring for your [gRPC Go](https://github.com/grpc/grpc-go) servers and clients.
 
