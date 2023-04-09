@@ -6,6 +6,7 @@ package grpc_prometheus
 import (
 	"time"
 
+	"github.com/prometheus/client_golang/prometheus"
 	"google.golang.org/grpc/codes"
 )
 
@@ -30,8 +31,26 @@ func newServerReporter(m *ServerMetrics, rpcType grpcType, fullMethod string) *s
 	return r
 }
 
+func (r *serverReporter) ReceiveMessageTimer() timer {
+	if r.metrics.serverStreamRecvHistogramEnabled {
+		hist := r.metrics.serverStreamRecvHistogram.WithLabelValues(string(r.rpcType), r.serviceName, r.methodName)
+		return prometheus.NewTimer(hist)
+	}
+
+	return emptyTimer
+}
+
 func (r *serverReporter) ReceivedMessage() {
 	r.metrics.serverStreamMsgReceived.WithLabelValues(string(r.rpcType), r.serviceName, r.methodName).Inc()
+}
+
+func (r *serverReporter) SendMessageTimer() timer {
+	if r.metrics.serverStreamSendHistogramEnabled {
+		hist := r.metrics.serverStreamSendHistogram.WithLabelValues(string(r.rpcType), r.serviceName, r.methodName)
+		return prometheus.NewTimer(hist)
+	}
+
+	return emptyTimer
 }
 
 func (r *serverReporter) SentMessage() {
