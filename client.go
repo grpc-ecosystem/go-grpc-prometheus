@@ -20,6 +20,9 @@ var (
 
 	// StreamClientInterceptor is a gRPC client-side interceptor that provides Prometheus monitoring for Streaming RPCs.
 	StreamClientInterceptor = DefaultClientMetrics.StreamClientInterceptor()
+
+	// ClientStatsHandler is a gRPC client-side stats.Handler that provides Prometheus monitoring for RPCs.
+	ClientStatsHandler = DefaultClientMetrics.NewClientStatsHandler()
 )
 
 func init() {
@@ -54,4 +57,22 @@ func EnableClientStreamReceiveTimeHistogram(opts ...HistogramOption) {
 func EnableClientStreamSendTimeHistogram(opts ...HistogramOption) {
 	DefaultClientMetrics.EnableClientStreamSendTimeHistogram(opts...)
 	prom.Register(DefaultClientMetrics.clientStreamSendHistogram)
+}
+
+// EnableClientMsgSizeReceivedBytesHistogram turns on recording of
+// single message send time of streaming RPCs.
+// This function acts on the DefaultClientMetrics variable and the
+// default Prometheus metrics registry.
+func EnableClientMsgSizeReceivedBytesHistogram(opts ...HistogramOption) {
+	DefaultClientMetrics.EnableMsgSizeReceivedBytesHistogram(opts...)
+	prom.Register(DefaultClientMetrics.clientMsgSizeReceivedHistogram)
+}
+
+// EnableClientMsgSizeSentBytesHistogram turns on recording of
+// single message send time of streaming RPCs.
+// This function acts on the DefaultClientMetrics variable and the
+// default Prometheus metrics registry.
+func EnableClientMsgSizeSentBytesHistogram(opts ...HistogramOption) {
+	DefaultClientMetrics.EnableMsgSizeSentBytesHistogram(opts...)
+	prom.Register(DefaultClientMetrics.clientMsgSizeSentHistogram)
 }

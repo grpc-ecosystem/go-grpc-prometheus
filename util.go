@@ -5,6 +5,7 @@ package grpc_prometheus
 
 import (
 	"strings"
+	"time"
 
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
@@ -26,6 +27,12 @@ var (
 		codes.FailedPrecondition, codes.Aborted, codes.OutOfRange, codes.Unimplemented, codes.Internal,
 		codes.Unavailable, codes.DataLoss,
 	}
+
+	allStatss = []grpcStats{Header, Payload, Tailer}
+
+	rpcInfoKey = "rpc-info"
+
+	defMsgBytesBuckets = []float64{0, 32, 64, 128, 256, 512, 1024, 2048, 8192, 32768, 131072, 524288}
 )
 
 func splitMethodName(fullMethodName string) (string, string) {
@@ -47,4 +54,31 @@ func typeFromMethodInfo(mInfo *grpc.MethodInfo) grpcType {
 		return ServerStream
 	}
 	return BidiStream
+}
+
+type grpcStats string
+
+const (
+	// Header indicates that the stats is the header
+	Header grpcStats = "header"
+
+	// Payload indicates that the stats is the Payload
+	Payload grpcStats = "payload"
+
+	// Tailer indicates that the stats is the Payload
+	Tailer grpcStats = "tailer"
+)
+
+// String function returns the grpcStats with string format.
+func (s grpcStats) String() string {
+	return string(s)
+}
+
+type rpcInfo struct {
+	fullMethodName string
+	startTime      time.Time
+}
+
+func newRPCInfo(fullMethodName string) *rpcInfo {
+	return &rpcInfo{fullMethodName: fullMethodName}
 }

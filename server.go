@@ -21,6 +21,9 @@ var (
 
 	// StreamServerInterceptor is a gRPC server-side interceptor that provides Prometheus monitoring for Streaming RPCs.
 	StreamServerInterceptor = DefaultServerMetrics.StreamServerInterceptor()
+
+	// ServerStatsHandler is a gRPC server-side stats.Handler that provides Prometheus monitoring
+	ServerStatsHandler = DefaultServerMetrics.NewServerStatsHandler()
 )
 
 func init() {
@@ -45,4 +48,22 @@ func Register(server *grpc.Server) {
 func EnableHandlingTimeHistogram(opts ...HistogramOption) {
 	DefaultServerMetrics.EnableHandlingTimeHistogram(opts...)
 	prom.Register(DefaultServerMetrics.serverHandledHistogram)
+}
+
+// EnableServerMsgSizeReceivedBytesHistogram turns on recording of handling time
+// of RPCs. Histogram metrics can be very expensive for Prometheus
+// to retain and query. This function acts on the DefaultServerMetrics
+// variable and the default Prometheus metrics registry.
+func EnableServerMsgSizeReceivedBytesHistogram(opts ...HistogramOption) {
+	DefaultServerMetrics.EnableMsgSizeReceivedBytesHistogram(opts...)
+	prom.Register(DefaultServerMetrics.serverMsgSizeReceivedHistogram)
+}
+
+// EnableServerMsgSizeSentBytesHistogram turns on recording of handling time
+// of RPCs. Histogram metrics can be very expensive for Prometheus
+// to retain and query. This function acts on the DefaultServerMetrics
+// variable and the default Prometheus metrics registry.
+func EnableServerMsgSizeSentBytesHistogram(opts ...HistogramOption) {
+	DefaultServerMetrics.EnableMsgSizeSentBytesHistogram(opts...)
+	prom.Register(DefaultServerMetrics.serverMsgSizeSentHistogram)
 }
