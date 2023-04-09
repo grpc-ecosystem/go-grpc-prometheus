@@ -30,11 +30,16 @@ func init() {
 	prom.MustRegister(DefaultServerMetrics.serverStreamMsgSent)
 }
 
-// Register takes a gRPC server and pre-initializes all counters to 0. This
+// prometheusServer defines the interface that is required for grpc_prometheus to Register.
+type prometheusServer interface {
+	GetServiceInfo() map[string]grpc.ServiceInfo
+}
+
+// Register takes a gRPC server (or any other struct that meets the
+// prometheusServer interface) and pre-initializes all counters to 0. This
 // allows for easier monitoring in Prometheus (no missing metrics), and should
-// be called *after* all services have been registered with the server. This
-// function acts on the DefaultServerMetrics variable.
-func Register(server *grpc.Server) {
+// be called *after* all services have been registered with the server.
+func Register(server prometheusServer) {
 	DefaultServerMetrics.InitializeMetrics(server)
 }
 
