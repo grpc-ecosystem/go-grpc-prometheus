@@ -1,4 +1,7 @@
 sudo: false
+arch:
+    - amd64
+    - ppc64le
 language: go
 go:
   - 1.9.x
@@ -6,7 +9,10 @@ go:
   - 1.11.x
   - 1.12.x
   - master
-
+matrix:  
+  allow failures:
+    - go: 1.9.x
+    - go: 1.10.x
 env:
 - GO111MODULE=on
 
